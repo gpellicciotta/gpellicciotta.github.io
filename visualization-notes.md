@@ -16,3 +16,4 @@
 - D3 in Depth [https://d3indepth.com/]
 - Dagre Docs [https://github.com/dagrejs/dagre/wiki]
 - Article by Mike Bostock, author of D3 [https://medium.com/@mbostock]
+- Charting libraries overview [https://docs.google.com/spreadsheets/d/1k-GVrhLw2_KdSvfCOt3RzF6otWfZQ5rbsBpVnTP425w/edit#gid=0]

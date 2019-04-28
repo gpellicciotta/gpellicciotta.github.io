@@ -116,6 +116,14 @@ Assumptions and possible issues:
 * Switching from using the old data tables to the new must be done in a way that doesn't interrupt operations... assuming we cannot have a 'read-only' period (there are constant updates) and it is also not possible to switch all code at once (since at each moment in time old code will be running): I can only see this working by introducing a kind of reverse sync process: from updates updating data in the new tables to the old tables (and avoiding recursion!). That way, code can get upgraded in a roundabout way.
   * This is itself assumes that sync + reverse sync processes can be introduced without downtime (e.g. with triggers only if creating/changing/dropping them can be done during normal operations; alternative is in code entirely)
 
+## XA - 2-Phase Commit 
+
+- [Open source XSA manager LIXA](http://sourceforge.net/p/lixa/code/HEAD/tarball)
+- [The XA spec](https://www2.opengroup.org/ogsys/jsp/publications/PublicationDetails.jsp?publicationid=11221)
+- http://usuaris.tinet.cat/sag/mq_xa.htm
+- http://www-01.ibm.com/support/knowledgecenter/SSAL2T_7.1.0/com.ibm.cics.tx.doc/tasks/t_usng_smpl_cics_micro_focus_netexprss_cobol_app.html
+- http://docs.oracle.com/cd/B10501_01/appdev.920/a96590/adga1_xa.htm
+- https://www.subbu.org/articles/transactions/NutsAndBoltsOfTP.html
 
 ## Transaction Logs
 

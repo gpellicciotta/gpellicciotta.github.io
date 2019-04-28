@@ -2,6 +2,9 @@
 
 Links to tutorials, articles and libraries related to web (app) development.
 
+## Stateless Authentication Tokens vs. Stateful Session Cookies:
+- http://cryto.net/~joepie91/blog/2016/06/13/stop-using-jwt-for-sessions/
+
 ## Javascript
 - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Inheritance_and_the_prototype_chain
 - https://www.safaribooksonline.com/library/view/learning-javascript-design/9781449334840/ch13s15.html

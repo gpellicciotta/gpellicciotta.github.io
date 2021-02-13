@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="../media/style.css" rel="stylesheet" type="text/css" media="all" />
+<title>A Portable Process Control Library</title>
+</head>
+<body>
+<h1>A Portable Process Control Library</h1>
+<h2>Why?</h2>
+<div><br />
+</div>
+<div>Controlling processes is inherintly un-portable yet needed in various scenario's:</div>
+<div>
+<ul><li>Monitoring/Operations:</li>
+<ul><li>Listing open/running processes that satisfy certain criteria</li>
+<li>Killing processes that run for too long or take too much memory and/or CPU</li></ul>
+<li>Applications that work with independent processes:</li>
+<ul><li>Manage (open/monitor/close/kill) worker processes</li>
+<li>Ensure processes get restarted when killed or aborted from some unexpected reason</li>
+<li>Ensure processes get killed when in a loop or taking too much memory and/or CPU</li>
+<li>Ensure processes get killed OR stay alive when a parent process dies&nbsp;</li></ul></ul>
+<h2>Ideal Library</h2>
+</div>
+<div>
+<ul><li>Create new process and:</li>
+<ul><li>Have a unique ID that makes it possible to monitor/kill this process</li>
+<li>Make it possible to let the process die if the parent process dies</li>
+<li>Make it possible to let the process live if the parent process dies</li>
+<li>Make it easy to capture stdout and stderr, and also provide stdin</li></ul>
+<li>Kill an existing process based on the unique ID</li>
+<li>Monitor the current status of an existing process: start time, command line, process ID, # of threads, CPU usage, memory usage, # of open file handles</li></ul>
+<h2>In Windows</h2>
+<p>Create a process:</p>
+<ul><li>CreateProcess call in kernel32.dll</li>
+<li>Creation flags:&nbsp;<a href="http://msdn.microsoft.com/en-us/library/windows/desktop/ms684863(v=vs.85).aspx">http://msdn.microsoft.com/en-us/library/windows/desktop/ms684863(v=vs.85).aspx</a></li></ul>
+<div>Get handle to open process from ID:</div>
+<div>
+<ul><li>OpenProcess:&nbsp;<a href="http://msdn.microsoft.com/en-us/library/ms684320(v=vs.85).aspx">http://msdn.microsoft.com/en-us/library/ms684320(v=vs.85).aspx</a></li></ul>
+</div>
+<div>Get start time of a process:</div>
+<div>
+<ul><li>GetProcessTimes:&nbsp;<a href="http://msdn.microsoft.com/en-us/library/ms683223">http://msdn.microsoft.com/en-us/library/ms683223</a></li></ul>
+</div>
+<div>Enumerate all open processes: EnumProcesses&nbsp;<a href="http://msdn.microsoft.com/en-us/library/windows/desktop/ms682629(v=vs.85).aspx" style="line-height:1.25;font-size:10pt">http://msdn.microsoft.com/en-us/library/windows/desktop/ms682629(v=vs.85).aspx</a></div>
+<div><br />
+</div>
+<div>Killing a process: TerminateProcess</div>
+<div><br />
+</div>
+<div>All processes associated with a Console get the same 'kill' events:&nbsp;<a href="http://msdn.microsoft.com/en-us/library/windows/desktop/ms682541(v=vs.85).aspx" style="line-height:1.25;font-size:10pt">http://msdn.microsoft.com/en-us/library/windows/desktop/ms682541(v=vs.85).aspx</a></div>
+<div><br />
+</div>
+<div>Get snapshot of currently running processes:&nbsp;<a href="http://msdn.microsoft.com/en-us/library/ms686701(v=vs.85).aspx" style="line-height:1.25;font-size:10pt">http://msdn.microsoft.com/en-us/library/ms686701(v=vs.85).aspx</a>&nbsp;and use that snapshot to kill:&nbsp;<a href="http://stackoverflow.com/questions/1173342/terminate-a-process-tree-c-for-windows?rq=1" style="line-height:1.25;font-size:10pt">http://stackoverflow.com/questions/1173342/terminate-a-process-tree-c-for-windows?rq=1</a></div>
+<div><br />
+</div>
+<div>Job objects can manage a group of processes as a whole:&nbsp;<a href="http://msdn.microsoft.com/en-us/library/ms684161(v=vs.85).aspx" style="line-height:1.25;font-size:10pt">http://msdn.microsoft.com/en-us/library/ms684161(v=vs.85).aspx</a></div>
+<div><br />
+</div>
+<div>How to create a Service from a jar:&nbsp;<a href="http://stackoverflow.com/questions/68113/how-to-create-a-windows-service-from-java-app" style="line-height:1.25;font-size:10pt">http://stackoverflow.com/questions/68113/how-to-create-a-windows-service-from-java-app</a></div>
+<h2><br />
+In Linux</h2>
+</div>
+<div><br />
+</div>
+<div>
+<ul><li>Kill child process when parent dies: use prctl(PR_SET_PDEATHSIG, SIGUP):&nbsp;<a href="http://stackoverflow.com/questions/284325/how-to-make-child-process-die-after-parent-exits">http://stackoverflow.com/questions/284325/how-to-make-child-process-die-after-parent-exits</a></li>
+<li><span style="line-height:1.25;font-size:10pt">Create new session (setsid) and/or process group (setpgid):&nbsp;</span><a href="http://stackoverflow.com/questions/2613104/why-fork-before-setsid">http://stackoverflow.com/questions/2613104/why-fork-before-setsid</a></li>
+<li>Establishing a new session (with setsid) detaches the process from its controlling terminal, ensuring it won't get the SIGHUP signal once this terminal session ends: needed to create a daemon process</li></ul>
+</div>
+
+</body>
+</html>

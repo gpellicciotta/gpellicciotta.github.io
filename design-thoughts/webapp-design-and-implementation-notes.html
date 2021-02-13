@@ -1,0 +1,131 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="../media/style.css" rel="stylesheet" type="text/css" media="all" />
+<title>WebApp Design &amp; Implementation Notes</title>
+</head>
+<body>
+<h1>WebApp Design &amp; Implementation Notes</h1>
+<h2><a
+name="intro">Introduction</a></h2>
+<p >This document collects  miscellaneous notes on the design and implementation of web applications.  </p>
+<p >This description ranges in detail from a description of the design requirements and goals to concrete implemention patterns.</p>
+<h2 >Contents</h2>
+<ul>
+  <li><a href="#requirements">Requirements</a></li>
+  <li><a href="#design_choices">Design Choices</a><ul><li><a href="#implementation_language">Implementation Language</a></li>
+      <li><a href="#web_server">Web Server</a></li>
+      <li><a href="#data_formats">Data Formats</a></li>
+      <li><a href="#persistent_data_stores">Persistent Data Stores</a></li>
+      <li><a href="#other_technology_dependencies">Other Technology Dependencies</a></li>
+      </ul>
+  </li>
+  <li><a href="#data_model">Data Model</a></li>
+</ul>
+<h2><a name="#requirements" id="#requirements"></a>Requirements</h2>
+<p>Each web app has at least following requirements:</p>
+<p>Functional: </p>
+<ol>
+  <li>Allow users to register, unregister and re-register (during a limited period) with the app, either directly or via some third-party service
+    <ol>
+      <li>Ensure unregistered users are truly forgotten after some time period</li>
+    </ol>
+  </li>
+  <li>Allow only registered users to login and log-out</li>
+  <li>Keep track of all admin-level application events like user registration/unregistration/reregistration, user data changes, app. startup/shutdown, app. warnings+errors
+    <ol>
+      <li>Optionally also keep track of user login/logout info and user session specific app events</li>
+    </ol>
+  </li>
+</ol>
+<p>Non-Functional:</p>
+<ol>
+  <li>Ensure install+upgrade via copy-and-paste with:
+    <ol>
+      <li>A single file or directory representing the executable</li>
+      <li>A single file or directory representing all persistent state (E.g. user account settings, activity log, ...)</li>
+      <li>A single file or directory representing all transient state (E.g. detailed log files, chached data, ...)</li>
+    </ol>
+  </li>
+  <li>Offer both an interactive web interface as a programmable web-services API</li>
+  <li>Use JSON as format for storing and exchanging data</li>
+  <li>Run on both Linux and Windows</li>
+  <li>Run within the four major browsers: Chrome, Firefox, IE and Safari</li>
+</ol>
+<h2><a name="#design_choices"></a>Design Choices</h2>
+<p>The general guiding principles for all below choices were making things as simple as possible to understand, maintain and extend. </p>
+<h3>Implementation Language</h3>
+<p>Portability, programming convience and general programmar availability lead to two possible choices:</p>
+<ul>
+  <li>Python</li>
+  <li>Java</li>
+</ul>
+<p>C# might emerge in the future as a third viable choice.</p>
+<h3>Web Server</h3>
+<p>For low-traffic web apps, the built-in webserver technologies should be used:</p>
+<ul>
+  <li>For Java: Jetty (not really built-in but close enough and packageable as a library)</li>
+  <li>For Python: truly built-in</li>
+</ul>
+<p>For web-apps with higher traffic expectations, but also in general, frameworks/technology choices should be made that enable an easy transition from the built-in technology to the use of large-scale web servers like NGINGX, Apache, IIS or Cloud-based ones like Google Appengine or Microsoft Azure.</p>
+<p>This means:</p>
+<ul>
+  <li>For Java: using Servlet's</li>
+  <li>For Python: using the ??? PIP</li>
+</ul>
+<h3>Data Formats </h3>
+<p> SVG, JSON and CSV as major data formats:</p>
+<ul>
+  <li>CSV to allow easy import in Excel for data that might benefit from additional visualization and calculation beyond what the web app itself can/will provide</li>
+  <li>SVG for data that represents diagrams or other complex visualizations since this is a defacto standard format that operates well both with propriatary tools like Visio and current web browsers, including HTML/CSS/Javascript</li>
+  <li>JSON for all other structured data since it also has wide support in programming languages and also is still human readable. <br />
+  XML would have been the other obvious choice here.</li>
+</ul>
+<h3>Persistence Data Stores</h3>
+<p>Persistent state can be stored in:</p>
+<ul>
+  <li>OS-level files with JSON data: very simple, yet still powerful enough for may situations</li>
+  <li>An embedded relational DB such as Derby or SQLite: for more complex data processing needs, particularly when relations and joins are needed or when transactional processing provides a significant benefit. These two embedded databases also provide a good portability storage without incurring complex install scenario's.</li>
+</ul>
+<h3>Other Technology Dependencies</h3>
+<p>Other dependencies should be restricted as much as possible, always taking care to not tamper with the goals of:</p>
+<ul>
+  <li>Easy copy-and-paste install</li>
+  <li>Portability</li>
+</ul>
+<h2><a name="#data_model" id="#data_model"></a>Data Model</h2>
+<p>Each web app will need two 'tables' at least:</p>
+<ul>
+  <li>USERS table for holding account info per user:
+    <ul>
+      <li>ID as unique ID that will never be re-used</li>
+      <li>NAME as displayable name</li>
+      <li>LOGIN as the login name</li>
+      <li>PASSWORD_HASH</li>
+      <li>PASSWORD_SALT</li>
+      <li>STATUS: 'registration-requested', 'registered', 'unregistered'</li>
+      <li>CREATION_TIME</li>
+      <li>LAST_PASSWORD_CHANGE_TIME</li>
+      <li>LAST_STATUS_CHANGE_TIME</li>
+    </ul>
+  </li>
+  <li>ACTIVITY_LOG table for holding info about important events in the app's life cycle (e.g. user account registration, unregistration, app startup/shutdown, execution errors, ...)
+    <ul>
+      <li>ID as unique ID that will never be re-used</li>
+      <li>EVENT_TIME as when the event is created in this table</li>
+      <li>EVENT_TYPE</li>
+      <li>EVENT_USER_ID as foreign key to USERS.ID</li>
+      <li>EVENT_DATA in JSON format</li>
+    </ul>
+  </li>
+</ul>
+<p>Examples of data models from open source web apps:</p>
+<ul>
+  <li><a href="http://trac.edgewall.org/wiki/TracDev/DatabaseSchema">Trac</a></li>
+  <li><a href="https://www.ravenbrook.com/tool/bugzilla-schema/?action=single&version=3.4.2&view=View+schema">Bugzilla</a></li>
+  <li><a href="http://meta.stackexchange.com/questions/2677/database-schema-documentation-for-the-public-data-dump-and-sede/2678#2678">StackOverflow</a></li>
+  <li><a href="http://www.sos-berlin.com/doc/en/scheduler/data/scheduler.sql.htm">JobScheduler</a></li>
+</ul>
+</body>
+</html>

@@ -1,0 +1,334 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="../media/style.css" rel="stylesheet" type="text/css" media="all" />
+<title>Parsing Implementation Considerations</title>
+</head>
+<body>
+<h1>Parsing Implementation Considerations</h1>
+<p>Creating a parser is always a challenge because:</p>
+<ul>
+  <li>How to document the formal grammar?</li>
+  <li>How to document the resulting AST or DOM?</li>
+  <li>How to keep documentation and implementation in sync?</li>
+  <li>How to deal with big and complex grammars?</li>
+  <li>Use a parser generator or write by hand?</li>
+  <li>Create a typed DOM or untyped AST?</li>
+  <li>Which building blocks for ASTs? Tokens, Nodes and/or Trees?</li>
+  <li>Random implementation thoughts</li>
+</ul>
+<h2>How to document the formal grammar?</h2>
+<p>Ideally:</p>
+<ul>
+  <li>Start from a formal grammar notation that can used for documentation generation</li>
+  <li>Generate the parser from this basis so doc and impl. are maximally in sync.</li>
+</ul>
+<p>In practice:</p>
+<ul>
+  <li>Hand-written parser: doc and impl. are maintained separately and there is no automatic check that both are or remain in sync</li>
+  <li>Generated parser: there is a formal input to the generator that is a good basis for documentation: it either can be used directly or documentation can be generated from it. Typically parser generators need 'technical grammar constructs' to workaround limitations of the parsing algorithm being used however (E.g. avoid left or right recursion, introduce syntactic or semantic predictes, ...), hence convoluting the actual grammar and its documentation.</li>
+</ul>
+<p>Pragmatic approach:</p>
+<ul>
+  <li>Make it easy to document the formal, human-directed, grammar rules close to the parser implementation of these rules in order to make it easy to keep both in sync.</li>
+  <li>Make it possible to generate a grammar documentation from the documentation snippets in the parser implementation</li>
+</ul>
+<p>Notes:</p>
+<ul>
+  <li>ANTLR's input forms already a good human-readable basis for generating a grammar documentation, with only following limitations:
+    <ul>
+      <li>The need for left-recursive rules is the only possible 'technical' limitation from a documentation perspective</li>
+      <li>Syntactic predicates should be left out of the generated docs; semantic predicates should probably remain, at least if they are not 'technical' in natural. A naming convention could make the distinction</li>
+    </ul>
+  </li>
+</ul>
+<h2>How to document the resulting AST or DOM?</h2>
+<p>Ideally:</p>
+<ul>
+  <li>Start from a formal AST building notation that can be used for documentation generation</li>
+  <li>Generate the tree building code from the formal notation to keep doc and impl.  maximally in sync.</li>
+</ul>
+<p>In practice:</p>
+<ul>
+  <li>Hand-written tree building: doc and impl. are maintained separately and there is no automatic check that both are or remain in sync</li>
+  <li>Generated tree building: there is a formal input to the tree building that is a good basis for documentation: it either can be used directly or documentation can be generated from it.</li>
+  <li>Due to the need for 'technical grammar constructs' during parsing, sometimes intermediate tree structures are created as well, which must be 'fixed' in a later phase. Same (and actually derived) problem as with parsing itself.</li>
+</ul>
+<p>Pragmatic approach:</p>
+<ul>
+  <li>Make it easy to document the formal, human-directed, tree construction rules close to the  implementation of these rules in order to make it easy to keep both in sync: ensuring that grammar rule, tree resulting from grammar rule and implementation of both parsing and tree building are close to each other.</li>
+  <li>Make it possible to generate a tree documentation from the documentation snippets in the parser/tree building implementation</li>
+</ul>
+<p>Notes:</p>
+<ul>
+  <li>ANTLR's tree building syntax already forms a good human-readable basis for generating a tree documentation</li>
+</ul>
+<h2>How to keep documentation and implementation in sync?</h2>
+<p>Pragmatic approach:</p>
+<ul>
+  <li>The grammar rule and resulting tree structure must be documented close to each other and to their actual implementation</li>
+</ul>
+<p>Notes:</p>
+<ul>
+  <li>ANTLR's parse rules with tree building actions syntax already form a good human-readable basis for generating both grammar and tree documentation, while at the same time forming the implementation: all in one place</li>
+</ul>
+<h2>How to deal with big and complex grammars?</h2>
+<p>Experience:</p>
+<ul>
+  <li>Bottom-up algorithm implementing parser generators like used by YACC/Bison suffer from a parsing algorithm that is limiting with less workaround possibilities than offered by top-down algorithms.</li>
+  <li>The GLR algorithm at least theoretically ensures parser compositionability while allowing human-readable grammar rules, but suffers practically from the need to introduce parse tree merging and from the general issue shared by all bottom-up algorithms: they are not intuitive, leading to very hard debugging experiences.</li>
+  <li>Practical experience with ANTLR has shown that it doesn't scale to very large grammars like COBOL or SQL. The splitting of grammars into sub-grammers also doesn't work as advertised, while exhibiting the same scaling issues.</li>
+  <li>While other parser generators might not (or to a lesser degree) suffer from these issues, the problem is that that will only become clear once a large investment (of time and effort) has already been made into trying.</li>
+</ul>
+<p>Need:</p>
+<ul>
+  <li>Big grammars need an implementation that scales, by allowing the actual grammar rules to be split over multiple code modules/classes</li>
+  <li>Complex grammars need flexibility in implementation specific grammar rules with arbitrary 'choice flexibility': it must be possible to fall back to writing custom code inspecting the token stream and determining whether the rule should be considered matching or not</li>
+  <li>Combination of grammars (E.g. SQL in COBOL) must also be possible in a way that maximally re-uses the individual parsers for both grammars</li>
+</ul>
+<h2>Use a parser generator or write by hand?</h2>
+<p>Experience:</p>
+<ul>
+  <li>All major programming language implementations that I'm aware of use a custom, hand-written, top-down, recursive descent parser generator, probably because of:
+    <ul>
+      <li>The issues with parser generators mentioned above</li>
+      <li>The flexibility of custom written implementations</li>
+      <li>The easy of debugging hand-written code</li>
+      <li>The performance (and tunnig) provided by hand-written code</li>
+    </ul>
+  </li>
+  <li>I've personally:
+    <ul>
+      <li>Used both Bison (bottom-up, LALR(1)) and  ANTLR (top-dow, LL(1) with predicates) professionally to create a COBOL parser (as well as others, but COBOL is by far the biggest, most complex)</li>
+      <li>Experimented with JavaCC and a miriad of other, well known parser generators, for experimentation purposes</li>
+      <li>Created hand-written parsers for small languages</li>
+    </ul>
+  </li>
+</ul>
+<p>Practical approach:</p>
+<ul>
+  <li>Hand-written parsers seem the better investment</li>
+  <li>But we need to first create a (handwritten) toolkit to support this, ensuring we can:
+    <ul>
+      <li>Document the formal grammar rules next to their implementation, and generate this as documentation</li>
+      <li>Create an AST with a documented structure, and generate this as documentation<br />
+        OR not create ASTs at all but directly create a fully typed DOM structure, hereby making documentation unnecessary</li>
+    </ul>
+  </li>
+</ul>
+<h2>Create a type DOM or untyped AST?</h2>
+<p>A parser, after matching tokens and determining that they form a syntactic unit, needs to determine what to do which this information. </p>
+<p>It can typically do four things:</p>
+<ul>
+  <li>Just return a 'true' or 'false' result, so forgetting about the just learned structural cohesion of tokens and just remembering that it was there</li>
+  <li>Return a structure that actually represents the parsing rule, so also remembering the tokens matched and any subrules used: this kind of structure is a parse tree. Its nodes represent parse rules.</li>
+  <li>Return a structure that also represents the hierarchical information of tokens matched while integrating any structures returned from subrules. This forms an AST, which is a hierarchical structure which in this regard is similar to a parse tree, but which typically less accurately represents the actual parse rules. That's why it's called <em><strong>a</strong>bstract</em> syntax tree: it is an abstracted, more condensed form than a parse tree, which conveys the <em>concrete</em> syntax and is also called concrete syntax tree (CST). Its nodes represent syntactic constructs.</li>
+  <li>Returns a typed object representing the syntax just recognized. I tend to call this a DOM, a Document Object Model, since all these objects together model (in a typed way) a full document in the language being parsed. Note that typical term DOM  is typically used in relation to XML or HTML but there is no reason not to use it more generally.</li>
+</ul>
+<p>The pros/cons as I currently see them:</p>
+<table border="1" bordercolor="#888" cellspacing="0">
+  <tbody>
+    <tr>
+      <td>&nbsp;</td>
+      <td><b>Parse Tree and AST&nbsp;</b></td>
+      <td><b>DOM&nbsp;</b></td>
+    </tr>
+    <tr>
+      <td>&nbsp;<b>Advantages</b></td>
+      <td><ul>
+          <li>The leaf-nodes form a direct connection to the source text (parts)</li>
+          <li>Generic traversal and search is possible: getNextSibling(), getParent(), getChildren(), getNodeType() are almost all primitives needed</li>
+          <li>Trees can be incomplete or even contain new subtree-structures 'on the fly' without being designed specifically</li>
+        </ul>
+        <br />
+        <br />
+      </td>
+      <td><ul>
+          <li>No need for tree-structure checking: DOM Objects have specific attributes and that's it</li>
+          <li>More readable attribute access (e.g. 'getName' is easier 'getFirstChild()')</li>
+          <li>Type-safety: only designed attributes and designed objects can be created - no chance of creating a corrupt tree</li>
+          <li>Generic search and traversal are also more-or-less possible with the visitor-pattern and when checking class-names as a tpe of NodeType.</li>
+        </ul></td>
+    </tr>
+    <tr>
+      <td>&nbsp;<b>Disadvantages</b></td>
+      <td><ul>
+          <li>Lack of type safety - trees can be corrupt.</li>
+          <li>No easy attribute access - also less readable: tree structures must be documented explicitly</li>
+        </ul>
+        <p>For parse trees specifically:</p>
+        <ul>
+          <li>When 'technical grammar' rules are introduced to please the algorithm and/or tool, these show up in the parse tree while typically they can be avoided in the AST</li>
+          <li>Very deep trees with many nodes having single children is typical: this can make traversal more difficult and performance in general worse</li>
+        </ul></td>
+      <td><ul>
+          <li>It's less obvious how to make the link of the DOM objects to the actual source text (parts)</li>
+          <li>Not as easy to create custom 'trees' or partial 'trees'. Also these gaps must be designed upfront (e.g. Statement interface could be implemented with UnknownStatement)</li>
+          <li>More (design) work is needed to support new syntax&nbsp;</li>
+        </ul></td>
+    </tr>
+  </tbody>
+</table>
+<p>The types of situations in which ASTs and DOMs must be useable:</p>
+<table border="1" bordercolor="#888" cellspacing="0">
+  <tbody>
+    <tr>
+      <td>Construct from parser for analysis and guiding a preprocessing step that alters parts of the original source text</td>
+      <td>Direct link to source text necessary, probably on the individual token/keyword level.<br />
+        <br />
+        AST has this direct link, although optional keywords must be preserved explicitly<br />
+        <br />
+        DOM could have additional attributes that are the link, or really just have a bag of the original tokens associated with it. Still: how to 'distribute' these tokens in the DOM hierarchy? e.g. DisplayStatement { DisplayExpression+ } and 'DISPLAY &quot;DFDF&quot; , &quot;dffd&quot;: who has the comma: DisplayStatement or DisplayExpression?<br />
+        <br />
+      </td>
+    </tr>
+    <tr>
+      <td>Complete source to source conversions (e.g. COBOL to Java) in which not much original source location info is needed&nbsp;</td>
+      <td>The semantics is really everything that counts here.<br />
+        Only for linking comments to DOM objects, there might be the need for source location info.</td>
+    </tr>
+    <tr>
+      <td>Source-level analysis and reporting (e.g. impact analysis of a specific field on other fields on lines xxx)&nbsp;</td>
+      <td>The semantic attributes in a DOM might make this a lot easier to search all impacted locations. Once this is done however, the reporting part should again be able to link to actual source text locations.</td>
+    </tr>
+    <tr>
+      <td>Statistical analysis of specific source code properties (e.g. use of certain keywords, or use of a specific layout style)&nbsp;</td>
+      <td>Only possible with DOM if all keyword tokens are kept associated somehow with the DOM objects.</td>
+    </tr>
+    <tr>
+      <td>Construct programmatically in order to generated/create source text&nbsp;</td>
+      <td>A lot easier with a DOM: no need to know the anticipated tree structure. On the other hand, the easiest construction technique is just writing &quot;text&quot; and - optionally - parsing it again to get a stream of tokens and/or AST/DOM.&nbsp;</td>
+    </tr>
+  </tbody>
+</table>
+<p>So... DOM or AST?</p>
+<p>Maybe both, which would be possible in multiple ways:</p>
+<ol>
+  <li>First create AST during parsing and then create DOM on top of the AST, with strategic two-way links between DOM objects and AST nodes. So there is a separate AST and DOM and there are links between those.<br />
+    Advantages: clear separation makes that applications that only need one part, can completely ignore the other</li>
+  <li>First create AST and have DOM objects be 'sugar' on top of an AST: attribute access is merely looking-up the right node in this model.&nbsp;<br />
+    Disadvantages: tight-integration makes is probably a lot more difficult to create DOMs from scratch and all the attributes will have to be hard-wired to specific AST nodes.</li>
+</ol>
+<h2>Which building blocks for ASTs? Tokens, Nodes and/or Trees?</h2>
+<p>A <b>token </b>represents an <i>indivisible</i>, <i>non-hierarchical</i> piece of input. It typically has following properties:</p>
+<ul>
+  <li>A type or kind that really identifies the type of input represented by the token (e.g. identifier, integer-literal, comma, plus-operator, ...)</li>
+  <li>The input source locations that are represented by the token, typically in the form of start and end line+column numbers</li>
+  <li>Optionally the input source text represented by the token, which can also be inferred indirectly by the input source location properties</li>
+  <li>Optionally a semantic value (E.g. the actual integer number that represents a portion of input that contains only characters that represent decimal digits)&nbsp;</li>
+</ul>
+<p>Typically an input source is 'tokenized' into a stream of tokens, whereby each input source location is represented by exactly one token and concatenating the text represented by each token can reproduce the original input source text exactly as it was. Sometimes this is not 100% true because: </p>
+<ul>
+  <li>Whitespace sequences are not always represented as tokens (as a perf. saving) and while the input locations that are part of each token allows reproducing a source text with the same 'visual representation', without keeping whitespace as tokens, it is not possible to ensure 100% fidelity, e.g. it is no longer known whether whitespace was encoded as consecutive spaces or with tabs.</li>
+  <li>Some languages (e.g. COBOL) allow for elementary elements like character literals or identifiers to get split over multiple lines. Again for perf. reasons it is then not unusual to still represent the different parts as a single token, hereby losing again the exact orginal input layout info.</li>
+</ul>
+A (tree) <b>node </b>orders tokens and/or other nodes into a <i>hierarchical structure</i>. A node always at least contains one child, which can be a token or another node.&nbsp;It typically represents a grammar rule and has following properties:
+<ul>
+  <li>A type or kind that identifiers the type of grammar rule being represented by the node tree rooted at the specific node</li>
+  <li>One ore more child nodes, which can be tokens or non-token nodes</li>
+</ul>
+
+Microsoft in its Roslyn implementation has chosen to use following split:
+<ul>
+  <li>SyntaxToken</li>
+  <li>SyntaxNode</li>
+  <li>SyntaxTrivia</li>
+</ul>
+See also:
+<ul>
+  <li><a href="http://blogs.msdn.com/b/ericlippert/archive/2012/06/08/persistence-facades-and-roslyn-s-red-green-trees.aspx">http://blogs.msdn.com/b/ericlippert/archive/2012/06/08/persistence-facades-and-roslyn-s-red-green-trees.aspx</a></li>
+</ul>
+
+Practical rules to make a distinction between tokens and nodes:
+<ul>
+  <li>A token is always a consecutive range of input text positions, with minimal length 1, or an implied element at a certain location in the input, hence with length 0 (these kind of tokens are also called pseudo-tokens)</li>
+  <li>A token always has a specific TokenKind type</li>
+  <li>A node represents a hierarchy AND a range of a consecutive tokens:</li>
+  <ul>
+    <li>Each node covers a range of consecutive token from an input token stream: at least 1 token is covered by each node</li>
+    <li>Each node can have 0 or more child-nodes</li>
+    <li>The range of tokens covered by a node are always a full superset of the union of the tokens covered by the node's child nodes (in other words: a parent node always covers all tokens covered by any of its child or descendent nodes)</li>
+  </ul>
+  <li>A node always has a specific SyntaxKind type</li>
+</ul>
+Furthermore:
+<ul>
+  <li>Both tokens and nodes have a distinct type, each one of the values from a [Token|Syntax]Kind constants list</li>
+  <li>When building a node-tree to represent certain syntax, it should be possible but not needed to provide concrete tokens. They can be 'auto-created' automatically since all essential syntax is represented by the nodes. If control is needed also over the non-essential syntax (E.g. case of keywords, whether optional keyword are present etc.), it should be possible to also specify the concrete syntax to encapsulate in tokens.</li>
+</ul>
+In OO terms:
+<pre>
+enum TokenType{ STRING_LITERAL; INTEGER_LITERAL; // ... } 
+ 
+// Token base class: 
+class Token {
+  TokenType Type;
+  String ConcreteSyntax; 
+} 
+ 
+// For tokens that come from a concrete source: 
+class SourceToken : Token {
+  Source Source;
+  String SourceText;
+  Location StartLocation;
+  Location EndLocation; 
+} 
+ 
+// For tokens that will be generated for constructed syntax trees: 
+class GeneratedToken : Token {
+  LocationHint LocationHint; // Prefer on new line, min. n spaces after last token, prefer vertical align with previous token, ...
+} 
+ 
+// Node base class:
+class Node {
+  SyntaxType Type
+  String ConcreteSyntax
+  Node[] ChildNodes
+  Token[] CoveredTokens
+}
+</pre>
+<h2>Random implementation thoughts</h2>
+<ul>
+  <li>One method or one class per grammar rule?<br />
+  One method seems a lot simpler, also having the potential for overriding specific methods...<br />
+  However:
+    <ul>
+      <li>Don't we need at least three methods:
+        <ul>
+          <li>canStartParse: for performance, </li>
+          <li>tryParse: which backtracking and not building a result yet, while potentially memoizing token ranges that have matched, and </li>
+          <li>parse: actually build a result and throw exception if it fails?</li>
+        </ul>
+      </li>
+      <li>But then we need an 'intermediary' to  enable, from a specific grammar rule class' tryParse or parse method, to call another grammar rule's methods</li>
+    </ul>
+  </li>
+  <li>How to enable a mix of auto-generated grammar rule's and hand-written ones? <br />
+  Would be nice if we can have declarative (EBNF alike) syntax to generate a stock implementation but still enable chosing to write an implementation by hand, in a completely custom fashion. Maybe via an annotation?</li>
+</ul>
+<pre>
+@EbnfSyntax(&quot;IF condition&quot;
+            &quot;THEN imperative-statement+&quot;
+            &quot;(ELSE imperative-statement+)?&quot;
+            &quot;END-IF&quot;)
+class IfStatement implements Matcher&lt;Token&gt; {
+  public boolean canStartParse(MatchContext ctx) {
+    return ctx.peek().id == IF.id;
+  }
+  public boolean tryParse(MatchContext ctx) {
+    try {
+      ctx.result = parse(ctx);
+      return true;
+    }
+    catch (MatchException me) {
+      return false;
+    }
+  }
+  public IfStatementSyntax parse(MatchContext ctx) {
+    // TODO: actual implementation
+  }
+}
+</pre>
+</body>
+</html>

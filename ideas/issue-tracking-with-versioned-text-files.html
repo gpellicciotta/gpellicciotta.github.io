@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="../media/style.css" rel="stylesheet" type="text/css" media="all" />
+<title>Issue-tracking via Text Files under Version-Control</title>
+</head>
+<body>
+<h1>Issue-tracking via Text Files under Version-Control</h1>
+<p>A simple issue-tracking system based on text-files under version-control.</p>
+<p>The key idea is that every ticket (= issue or enhancement request) will correspond to a single text file, which is stored in a version-control system (e.g. subversion).</p> 
+<p>Other (general) concepts:
+</p><ul>
+  <li>Tickets can be edited in a wiki-like fashion, allowing for editing (i.e. correction) of previous comments and even the merging of multiple comments.</li>
+  <li>As tickets are just text-files, they can be stored alongside a project's other artifacts (source code, documentation, ...) and fit naturally in the project's VCS repository. The proposed directory name is 'tickets'.</li>
+  <li>A ticket is just a document with separate sections for the different comments made on the ticket and some extra meta-data: name, short description, status, severity, ... Only the first three of these must be predefined, all other types of meta-data can be configured on a project-per-project basis.</li>
+</ul>
+<h2>Example ticket file structure</h2>
+<pre>
+     New feature: import from Bugzilla
+ 
+     Meta-data
+     =========
+      
+     Status: assigned
+     Severity: critical
+     Priority: 1
+     Reporter: jeff@company.com
+     Assignee: gio@company.com
+     Interested: lee@company.com, david@company.com
+     Deadline: 15 August 2009
+     Milestone: R1
+     Blocks: #23423, #23432
+     Depends-on: #88822
+     Attachments: 1
+ 
+     Description
+     ===========
+     
+     The automatic import of tickets from a Bugzilla 3.* database should
+     be created. It should be possible to import either all or a subset of 
+     the bugzilla issues stored in a Bugzilla database.
+     
+     #1 from gio@company.com - 12 August 2009, 15:45
+     ===============================================   
+     Changed: Status, Assignee, Depends-On
+ 
+     I will start working on this.
+ 
+     #2 from lee@company.com - 12 August 2009, 16:40
+     ================================================   
+     Changed: Interested, Deadline, Blocks, Depends-on, Milestone
+ 
+     #3 from gio@company.com - 12 August 2009, 17:45
+     ===============================================   
+     Changed: Status, Assignee, Depends-On
+ 
+     This is harder than I though: I need to find someone who can explain the bugzilla 
+     database schema first.
+ 
+     #4 from gio@company.com - 12 August 2009, 15:45
+     ===============================================   
+     Changed: Attachments
+ 
+     Attached: Bugzilla Oracle database schema [attachments/ticket-243242-1.att mime: binaries/pdf]
+</pre>
+</body>
+</html>

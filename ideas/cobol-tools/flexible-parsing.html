@@ -1,0 +1,123 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Flexible/Extensible Parsing</title>
+</head>
+
+<body>
+<h1>Flexible/Extensible Parsing</h1>
+The basis of any set of Cobol tools is a good parser: a component which transforms a text buffer into a structured model (aka DOM).
+<div><br>
+</div>
+<h2>Requirements</h2>
+<div><br>
+</div>
+<div>When created as part of a compiler, shortcuts can be taken in the parsing: whitespace, comment and compiler directive lines can be omitted or directly replaced. However, when the goal is being a basic building block for activities as 'Pretty-printing', 'Reengineering', 'Syntax-highlighting', ... then the set of design requirements is extended with:</div>
+<div>
+<ul><li>Whitespace, comments etc. must be preserved (needed for: pretty-printing, refactoring, ...)</li>
+<li>Detailed location information must be preserved (needed for: refactoring, diagnostic messages, ...)</li></ul>
+<div>Also, the Cobol tools are targeted at working with as many Cobol dialects as possible, hence following additional requirements:</div>
+<div>
+<ul><li>Possibility to 'not understand' parts of a Cobol source but still recognize as much as possible and enable further processing</li>
+<li>It must be easy to extend the parser to recognize syntax found in newly discovered Cobol dialects</li>
+<li>It must be easy to extend the parser to recognize embedded language constructs; the actual parsing of these constructs should be made possible via parser-plugins.</li></ul>
+</div>
+<div><br>
+</div>
+<h2>Design</h2>
+<div><br>
+</div>
+<h4>Which COBOL</h4>
+<div>Cobol parsing will be based on the ISO2002 standard, except for the OO-related syntax, while providing extensions for:</div>
+<div>
+<ul><li>Enterprise Cobol</li>
+<li>MicroFocus Cobol</li>
+<li>COBOL2000</li>
+<li>Fujitsu NetCobol</li>
+<li>Wang Cobol</li></ul>
+<div>OO-related syntax is not envisioned to be supported in the near term.</div>
+<div><br>
+</div>
+<h4>Basic Components</h4>
+</div>
+<div>Following components / features should be part of the Cobol parsing package:</div>
+<div><br>
+</div>
+<div>
+<ul><li>[CobolToken] A fixed set of tokens: this will be the common alphabet for many of the processing tools, including the actual parser. <br>
+Following token types will be needed:</li>
+<ul><li>Layout-related:</li>
+<ul><li>SEQUENCE-AREA</li>
+<li>COMMENT-AREA</li>
+<li>WHITESPACE</li>
+<li>END-OF-LINE</li>
+<li>COMMENT-LINE</li>
+<li>INLINE-COMMENT</li>
+<li>DEBUG-INDICATOR</li>
+<li>CODE-INDICATOR</li>
+<li>CONTINUATION-INDICATOR</li>
+<li>COMMENT-INDICATOR</li></ul>
+<li>Simple processing (pseudo-tokens):</li>
+<ul><li>START-OF-DEBUG-LINE</li>
+<li>END-OF-DEBUG-LINE</li>
+<li>START-OF-DIRECTIVE-LINE</li>
+<li>END-OF-DIRECTIVE-LINE</li>
+<li>SOURCE-FORMAT-CHANGE</li>
+<li>START-OF-COPYBOOK</li>
+<li>END-OF-COPYBOOK</li>
+<li>START-OF-INACTIVE-CODE</li>
+<li>END-OF-INACTIVE-CODE</li></ul>
+<li>Parsing:</li>
+<ul><li>WORD</li>
+<li>SEMICOLON</li>
+<li>DOT</li>
+<li>PLUS-OPERATOR</li>
+<li>MINUS-OPERATOR</li>
+<li>MULTIPLY-OPERATOR</li>
+<li>DIVIDE-OPERATOR</li>
+<li>EXPONENT-OPERATOR</li>
+<li>INVOCATION-OPERATOR</li>
+<li>PSEUDO-TEXT-DELIMITER</li>
+<li>LEFT-PAREN</li>
+<li>RIGHT-PAREN</li>
+<li>INTEGER-LITERAL</li>
+<li>FIXED-POINT-LITERAL</li>
+<li>FLOATING-POINT-LITERAL</li>
+<li>ALPHANUMERIC-LITERAL</li>
+<li>ALPHANUMERIC-HEX-LITERAL</li>
+<li>NATIONAL-LITERAL</li>
+<li>NATIONAL-HEX-LITERAL</li>
+<li>BOOLEAN-LITERAL</li>
+<li>BOOLEAN-HEX-LITERAL</li>
+<li>PICTURE-STRING</li>
+<li>UNKNOWN</li></ul></ul>
+<li>[CobolSource] Cobol sources will be represented by a named text buffer with properties describing the (initial) source format and the expected COBOL dialect/flavor.</li>
+<li>[CobolFlavor] A Cobol dialect/flavor's specific properties that can be used to direct parsing or analysis will be bundled and associated with individual sources:</li>
+<ul><li>The set of reserved words</li>
+<li>The max. length of words and literals</li>
+<li>The characters allowed in words and literals</li>
+<li>...</li></ul>
+<li>[CobolTokenizer] Tokenization is the process of transforming a text buffer into a stream of tokens. Tokenization will not perform preprocessing of COPY, COPY ... REPLACE, REPLACE or other directive statements, except for the SOURCE-FORMAT directive: this needs to be processed during the tokenization phase. &nbsp;Pseudo-tokens will be created in order to facilitate/easy further processing of the token stream: START/END-OF-DEBUG-LINE, SOURCE-FORMAT-CHANGE and START/END-OF-DIRECTIVE-LINE. Tokenization will also take care of continuation of Cobol WORDS, literals or PICTURE-STRINGs. A single token will be output for any such continued parts, however this token will contain references to the contingeous ranges in the Cobol source that make up the token.<br>
+The output will be an ordered buffer of Tokens: all tokens will be placed in ascending order of their start location. Due to continuation, it is possible that the end locations are not-ascending however.&nbsp;</li>
+<li>[CobolPreprocessor] This component will transform a token buffer as constructed by a [CobolTokenizer] into a new token buffer that differs from the original one in following ways:</li>
+<ul><li>COPY and REPLACE directives will be processed and additional tokens (from the COPYied libraries) inserted (and replaced)</li>
+<li>Other compiler directives will optionally be processed too and START/END-OF-INACTIVE-CODE tokens inserted to indicate to further processors which tokens can be ignored from a compiler point-of-view (due to preprocessing logic or because debug lines are not enabled)</li></ul>
+<li>[CobolParser] The actual parser will read the token stream's 'active' tokens and construct a DOM: a hierarchical and structured representation of the original COBOL source(s) from which the token stream was built. The DOM will be populated with CobolDOMObject's that have properties specific to the COBOL syntax element they are trying to represent. E.g. A GotoStatement element will have properties indicating the goto-target but also whether a depending-on clause was present and if so: what the depending-on target is. All [CobolDOMObject]s also provide access to the underlying [CobolToken]s they are built from. The parser itself can be extended by 'parser-plugins' which will be given a chance to consume part of the token stream upon encountering specific anchor token's for which the plugin has registered an interest.</li>
+<li>[CobolDOM] The CobolDOM is designed in a way that new Cobol sources can be build in a pure programmatic fashion, without underlying CobolSource and CobolTokens.</li>
+<li>All basic recognition components (CobolTokenizer, CobolPreprocessor and CobolParser) return meaningful error messages with clear indication of source location(s).</li></ul>
+</div>
+<div><br>
+</div>
+<div><br>
+</div>
+<div><br>
+</div>
+<div><br>
+</div>
+<div><br>
+</div>
+</div>
+
+</body>
+</html>

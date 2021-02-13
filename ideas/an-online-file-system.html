@@ -1,0 +1,99 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="../media/style.css" rel="stylesheet" type="text/css" media="all" />
+<title>Online File System</title>
+</head>
+<body>
+<h1>Online File System</h1>
+<h2>The Idea</h2>
+The idea is pretty simple: have an online system that stores and provides access to a bunch of files.
+<div><br />
+</div>
+<div>Why this would be worthwhile:</div>
+<div>
+<ul><li>Have access to files from anywhere</li>
+<li>Possibility to implement features that current file-systems don't always provide:&nbsp;</li>
+<ul><li>Full encryption</li>
+<li>Custom tagging (like gmail's mail tagging)</li>
+<li>Extended search facility</li>
+<li>Creation, last-access and last-modified times + accessor names</li>
+<li>Keep previous versions</li>
+<li>File-sharing</li>
+<li>Monitor all accesses/changes (via RSS feed?) to all files/specific files</li></ul>
+<li>Possibility to implement 'perfect' backup via online storage systems such as Amazon's SS3</li></ul>
+</div>
+<div><br />
+</div>
+<div>The obvious downsides:</div>
+<div>
+<ul><li>Must always download file before use (slow + bandwith usage)</li>
+<li>Must always upload file after change (slow + bandwith usage)</li>
+<li>No native (local, on pc) access to these files, so no easy way to use them via scripts etc.</li>
+<li>No explorer-alike integration for these files</li></ul>
+</div>
+<div><br />
+</div>
+<div>The best of both worlds would be:</div>
+<div>
+<ul><li>An online file system that is authorative&nbsp;</li>
+<li>A local/native file system extension that emulates a local file-system on top of the 'back-end' online file system</li>
+<li>Files would be cached locally and automatically synced with the online system</li></ul>
+<div><br />
+</div>
+<h2>Design</h2>
+<div><br />
+</div>
+<div>3 phases:</div>
+<div>
+<ol><li>Simple storage + upload/download features</li>
+<li>Local file-system extensions; file-versioning; file-encryption; search by content</li>
+<li>Enable conflict-detection when updates from multiple locations can occur; maybe implement locking mechanism; solve the 'multiple-location' issue</li>
+</ol>
+<h3>Phase 1</h3>
+</div>
+<div><br />
+</div>
+</div>
+<div>Features to be implemented:</div>
+<div>
+<ul><li>Upload individual files</li>
+<li>Upload group of files (via zip)</li>
+<li>List all files</li>
+<li>Search for files by name</li>
+<li>Search for files by access, creation and mod-time or name</li>
+<li>Search for files by tag</li>
+<li>Add custom tags to files</li>
+<li>Download individual file</li>
+<li>Download group of files</li>
+<li>View (online) a single file assuming it is text</li></ul>
+<div><br />
+</div>
+</div>
+<h3>Phase 2</h3>
+<div><br />
+</div>
+<div>
+<div>Features to be implemented:</div>
+<div>
+<ul><li>Windows file-system hook that acts as a mapped drive and offers access to all files in the online file system</li>
+<ul><li><br />
+</li></ul>
+<li>Additional online features:</li>
+<ul><li>Create account / delete account</li>
+<li>Specify file preferences: case sensitive, store original paths, ...</li>
+<li>Keep multiple file versions</li>
+<li>Specify how many versions to keep</li>
+<li>Delete file or files -&gt; tag 'deleted'</li>
+<li>Forever delete files marked as 'deleted'</li></ul></ul>
+</div>
+</div>
+<div><br />
+</div>
+<div><br />
+</div>
+<div><br />
+</div>
+</body>
+</html>

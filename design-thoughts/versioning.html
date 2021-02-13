@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="../media/style.css" rel="stylesheet" type="text/css" media="all" />
+<title>Versioning</title>
+</head>
+<body>
+<h1>Versioning</h1>
+<h2>TOC</h2>
+<ul>
+  <li><a href="#why">Why</a></li>
+  <li><a href="#how">How</a></li>
+  <li><a href="#compatibility">Compatibility</a></li>
+  <li><a href="#references">References</a></li>
+</ul>
+<h2><a name="why" id="why"></a>Why</h2>
+<p>What is the idea behind putting a 'version' on a piece of software? To distinguish it and other versions/configurations of the same software.&nbsp;</p>
+<p>This 'distinguishment' can both have technical and a psychological aspects:
+</p><ul>
+  <li>Psychological: to indicate that the software has improved in some significant way, or that it is production-ready, or the opposite: it is not production-ready</li>
+  <li>Technical: to indicate whether the software is compatible with other versions, and if compatible: to indicate the scope of changes that have been applied; also to distinguish between version of the same software and are not identical.</li>
+</ul>
+<h2><a name="how" id="how"></a>How </h2>
+<p>Multiple versioning schemes are used. See <a href="http://www.google.com/url?q=http%3A%2F%2Fen.wikipedia.org%2Fwiki%2FSoftware_versioning&amp;sa=D&amp;sntz=1&amp;usg=AFrqEzeZfd9FhRkoiocEkHs4QqT-AB73Fg">wikipedia</a>&nbsp;for a detailed list, but common schemes include:
+</p><ul>
+  <li><kbd>&lt;Year&gt;</kbd><br />
+    Examples: Windows 2000, Excel 98</li>
+  <li><kbd>&lt;Major&gt;.&lt;Minor</kbd>&gt;<br />
+    Examples: UltraEdit 14.00, Ant 1.7</li>
+  <li><kbd>&lt;Major&gt;.&lt;Minor&gt;.&lt;Patch/Update&gt;</kbd><br />
+    Examples: Linux 2.6.0</li>
+  <li><kbd>&lt;Major&gt;.&lt;Minor&gt;.&lt;Micro&gt;.&lt;Patch/Update&gt;</kbd><br />
+    Examples: Google Chrome 2.0.172.39, Java&nbsp;<span style="font-family:arial;font-size:12px;line-height:18px">1.5.0_13</span></li>
+  <li><kbd>&lt;Major&gt;.&lt;Minor&gt;&lt;Quality-level&gt;</kbd><br />
+    Examples: Windows 7RC1, Firefox 3.0.9-beta</li>
+</ul>
+<p>My preferred versioning scheme: <kbd>&lt;major-version&gt;.&lt;minor-version&gt;&lt;release-level&gt;?</kbd> </p>
+<ul>
+  <li>The major version is there to indicate incompatibilities</li>
+  <li>The minor version to indicate that functionality has been added or bugs have been fixed</li>
+  <li>The release level to distinguish between a software component that is released (without &lt;release-level&gt;) or still in test (-alpha, -beta, -rc)</li>
+</ul>
+<h2><a name="compatibility" id="compatibility"></a>Compatibility</h2>
+<p>Technically, the major benefits of a version number is indicating compatibility with other versions. The term 'compatibility' has however a different meaning for different types of software:
+</p><table border="1" bordercolor="#888" cellspacing="0">
+  <tbody>
+    <tr>
+      <td><b>&nbsp;Software Type</b></td>
+      <td><b>What is 'compatibility' ?</b></td>
+    </tr>
+    <tr>
+      <td>&nbsp;Library&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;</td>
+      <td>Compatible means that clients of the library can run unaltered when using the new version of the library. This means that the new version has not removed or altered any existing functionality. Adding new functionality is possible though.&nbsp;</td>
+    </tr>
+    <tr>
+      <td>&nbsp;Application&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;</td>
+      <td>Compatible means that all old functionality is still available and accessible in exactly the same way(s) it was previously. Any application outputs must still be in the same format as previously in order to not break other applications that work use these as input.&nbsp;</td>
+    </tr>
+    <tr>
+      <td>&nbsp;GUI Application&nbsp;&nbsp;&nbsp;</td>
+      <td>All old functionality is available without any learning curve: it can be accessed in the same ways (menus, toolbars, shortcuts) as previously. &nbsp;Next to that, the application outputs (reports, log file, error messages, ...) are unchanged in as far as they relate to old functionality.</td>
+    </tr>
+    <tr>
+      <td>&nbsp;CUI Application&nbsp;&nbsp;&nbsp;</td>
+      <td>Old command lines and old configuration files are still valid. Next to that, application outputs (reports, log files, error messages, ...) are unchanged as far as they relate to old functionality.&nbsp;</td>
+    </tr>
+    <tr>
+      <td>&nbsp;Web Application&nbsp;&nbsp; &nbsp;</td>
+      <td>All old functionality is still valid and accessible without any learning curve, Old URLs are still valid. Outputs (RSS feeds, XML reports, ...) are unchanged as far as they relate to old functionality.&nbsp;</td>
+    </tr>
+  </tbody>
+</table><p></p>
+<h3><a name="expressing_dependencies" id="expressing_dependencies"></a>Expressing Software Dependencies</h3>
+<p> Expression dependencies between software packages/modules can be based on:
+</p><ul>
+  <li>Expressing the requirement of one specific version of the software being available: no risk, but also no automatic bug fixing or other improvements</li>
+  <li>Expression the requirement of a specific version or any later, but compatible version: automatic bug fixing/improvements will be available, less different versions of software components need to be kept on the system, but there is a (small?) risk attached: as version numbering is a non-automatic process, versions that indicate full backward-compatibility might not be, or even when they are, a bug migth get introduced causing the client software to fail while using the newer version</li>
+</ul>
+The weak point in all versioning schemes is the fact that the version number is to be manually set: it would be much better if it could be determined in an automated way. <br />
+<h2><a name="references" id="references"></a>References</h2>
+<ul>
+  <li><a href="http://wiki.eclipse.org/index.php/Version_Numbering">Eclipse' versioning guidelines</a></li>
+</ul>
+<br />
+</div>
+</body>
+</html>

@@ -1,0 +1,218 @@
+<svg width="437" height="931" xmlns="http://www.w3.org/2000/svg">
+ <g>
+  <title>Layer 1</title>
+  <g>
+   <g>
+    <rect fill="#A8A8A8" fill-opacity="0.6" stroke-opacity="0.6" stroke-width="2" stroke="#A8A8A8" height="20" width="136.04969" y="570" x="162.70306"/>
+   </g>
+   <g>
+    <rect fill="#ffffff" stroke-width="2" stroke="#000000" height="20" width="136.04969" y="566" x="158.70306"/>
+   </g>
+   <g>
+    <rect fill="#A8A8A8" fill-opacity="0.6" stroke-opacity="0.6" stroke-width="2" stroke="#A8A8A8" height="20" width="136.04969" y="590" x="162.70306"/>
+   </g>
+   <g>
+    <rect fill="#ffffff" stroke-width="2" stroke="#000000" height="20" width="136.04969" y="586" x="158.70306"/>
+   </g>
+   <g>
+    <rect fill="#A8A8A8" fill-opacity="0.6" stroke-opacity="0.6" stroke-width="2" stroke="#A8A8A8" height="50" width="136.04969" y="610" x="162.70306"/>
+   </g>
+   <g>
+    <rect fill="#ffffff" stroke-width="2" stroke="#000000" height="50" width="136.04969" y="606" x="158.70306"/>
+   </g>
+   <g>
+    <text text-anchor=" middle" y="579" x="227.00001">
+     <tspan font-weight="bold" fill="#000000" font-family="Arial" font-size="12" xml:space="preserve">CobolAST</tspan>
+    </text>
+   </g>
+   <g/>
+   <g>
+    <text text-anchor=" start" y="621" x="160.70306">
+     <tspan fill="#000000" font-family="Arial" font-size="12" xml:space="preserve">type</tspan>
+    </text>
+    <text text-anchor=" start" y="635.8" x="160.70306">
+     <tspan fill="#000000" font-family="Arial" font-size="12" xml:space="preserve">text</tspan>
+    </text>
+    <text text-anchor=" start" y="650.6" x="160.70306">
+     <tspan fill="#000000" font-family="Arial" font-size="12" xml:space="preserve">tokens</tspan>
+    </text>
+   </g>
+  </g>
+  <g>
+   <g>
+    <rect fill="#A8A8A8" fill-opacity="0.6" stroke-opacity="0.6" stroke-width="2" stroke="#A8A8A8" height="20" width="136.04969" y="268.5" x="151.70306"/>
+   </g>
+   <g>
+    <rect fill="#ffffff" stroke-width="2" stroke="#000000" height="20" width="136.04969" y="264.5" x="147.70306"/>
+   </g>
+   <g>
+    <rect fill="#A8A8A8" fill-opacity="0.6" stroke-opacity="0.6" stroke-width="2" stroke="#A8A8A8" height="20" width="136.04969" y="288.5" x="151.70306"/>
+   </g>
+   <g>
+    <rect fill="#ffffff" stroke-width="2" stroke="#000000" height="20" width="136.04969" y="284.5" x="147.70306"/>
+   </g>
+   <g>
+    <rect fill="#A8A8A8" fill-opacity="0.6" stroke-opacity="0.6" stroke-width="2" stroke="#A8A8A8" height="49" width="136.04969" y="308.5" x="151.70306"/>
+   </g>
+   <g>
+    <rect fill="#ffffff" stroke-width="2" stroke="#000000" height="49" width="136.04969" y="304.5" x="147.70306"/>
+   </g>
+   <g>
+    <text text-anchor=" middle" y="277.5" x="216.00001">
+     <tspan font-weight="bold" fill="#000000" font-family="Arial" font-size="12" xml:space="preserve">CobolToken</tspan>
+    </text>
+   </g>
+   <g/>
+   <g>
+    <text text-anchor=" start" y="319.5" x="149.70306">
+     <tspan fill="#000000" font-family="Arial" font-size="12" xml:space="preserve">type</tspan>
+    </text>
+    <text text-anchor=" start" y="334.3" x="149.70306">
+     <tspan fill="#000000" font-family="Arial" font-size="12" xml:space="preserve">source</tspan>
+    </text>
+    <text text-anchor=" start" y="349.1" x="149.70306">
+     <tspan fill="#000000" font-family="Arial" font-size="12" xml:space="preserve">sourceFragments</tspan>
+    </text>
+   </g>
+  </g>
+  <g>
+   <g>
+    <rect fill="#A8A8A8" fill-opacity="0.6" stroke-opacity="0.6" stroke-width="2" stroke="#A8A8A8" height="20" width="136.04969" y="105.5" x="153.70306"/>
+   </g>
+   <g>
+    <rect fill="#ffffff" stroke-width="2" stroke="#000000" height="20" width="136.04969" y="101.5" x="149.70306"/>
+   </g>
+   <g>
+    <rect fill="#A8A8A8" fill-opacity="0.6" stroke-opacity="0.6" stroke-width="2" stroke="#A8A8A8" height="20" width="136.04969" y="125.5" x="153.70306"/>
+   </g>
+   <g>
+    <rect fill="#ffffff" stroke-width="2" stroke="#000000" height="20" width="136.04969" y="121.5" x="149.70306"/>
+   </g>
+   <g>
+    <rect fill="#A8A8A8" fill-opacity="0.6" stroke-opacity="0.6" stroke-width="2" stroke="#A8A8A8" height="35" width="136.04969" y="145.5" x="153.70306"/>
+   </g>
+   <g>
+    <rect fill="#ffffff" stroke-width="2" stroke="#000000" height="35" width="136.04969" y="141.5" x="149.70306"/>
+   </g>
+   <g>
+    <text text-anchor=" middle" y="114.5" x="218.00001">
+     <tspan font-weight="bold" fill="#000000" font-family="Arial" font-size="12" xml:space="preserve">CobolSource</tspan>
+    </text>
+   </g>
+   <g/>
+   <g>
+    <text text-anchor=" start" y="156.5" x="151.70306">
+     <tspan fill="#000000" font-family="Arial" font-size="12" xml:space="preserve">lines</tspan>
+    </text>
+    <text text-anchor=" start" y="171.3" x="151.70306">
+     <tspan fill="#000000" font-family="Arial" font-size="12" xml:space="preserve">codeLines</tspan>
+    </text>
+   </g>
+  </g>
+  <g>
+   <path stroke="#000000" fill="none" stroke-dasharray="23, 0" d="m217.80228,181c0.13182,21.66667 -20.1356,32.5 -60.80228,32.5c-40.66667,0 -61,18.96667 -61,56.89999c0,37.93335 17.23435,56.90002 51.70306,56.90002"/>
+   <g transform="rotate(98 NaN,NaN) ">
+    <polygon stroke="#000000" fill="#000000" points="220 177 226 174 226 180"/>
+   </g>
+   <g/>
+  </g>
+  <g>
+   <g>
+    <rect fill="#A8A8A8" fill-opacity="0.6" stroke-opacity="0.6" stroke-width="2" stroke="#A8A8A8" height="20" width="139.44223" y="388.5" x="202"/>
+   </g>
+   <g>
+    <rect fill="#ffffff" stroke-width="2" stroke="#000000" height="20" width="139.44223" y="384.5" x="198"/>
+   </g>
+   <g>
+    <rect fill="#A8A8A8" fill-opacity="0.6" stroke-opacity="0.6" stroke-width="2" stroke="#A8A8A8" height="20" width="139.44223" y="408.5" x="202"/>
+   </g>
+   <g>
+    <rect fill="#ffffff" stroke-width="2" stroke="#000000" height="20" width="139.44223" y="404.5" x="198"/>
+   </g>
+   <g>
+    <rect fill="#A8A8A8" fill-opacity="0.6" stroke-opacity="0.6" stroke-width="2" stroke="#A8A8A8" height="79" width="139.44223" y="428.5" x="202"/>
+   </g>
+   <g>
+    <rect fill="#ffffff" stroke-width="2" stroke="#000000" height="79" width="139.44223" y="424.5" x="198"/>
+   </g>
+   <g>
+    <text text-anchor=" middle" y="397.5" x="268">
+     <tspan font-weight="bold" fill="#000000" font-family="Arial" font-size="12" xml:space="preserve">SourceFragment</tspan>
+    </text>
+   </g>
+   <g/>
+   <g>
+    <text text-anchor=" start" y="439.5" x="200">
+     <tspan fill="#000000" font-family="Arial" font-size="12" xml:space="preserve">source</tspan>
+    </text>
+    <text text-anchor=" start" y="454.3" x="200">
+     <tspan fill="#000000" font-family="Arial" font-size="12" xml:space="preserve">startLine</tspan>
+    </text>
+    <text text-anchor=" start" y="469.1" x="200">
+     <tspan fill="#000000" font-family="Arial" font-size="12" xml:space="preserve">startColumn</tspan>
+    </text>
+    <text text-anchor=" start" y="483.9" x="200">
+     <tspan fill="#000000" font-family="Arial" font-size="12" xml:space="preserve">endLine</tspan>
+    </text>
+    <text text-anchor=" start" y="498.7" x="200">
+     <tspan fill="#000000" font-family="Arial" font-size="12" xml:space="preserve">endColumn</tspan>
+    </text>
+   </g>
+  </g>
+  <g>
+   <path stroke="#000000" fill="none" stroke-dasharray="23, 0" d="m215,353l0,15.75l53,0l0,14.75"/>
+   <g transform="rotate(270 NaN,NaN) ">
+    <polygon stroke="#000000" fill="#000000" points="268 384.5 276 390.5 284 384.5 276 378.5"/>
+   </g>
+   <g/>
+  </g>
+  <g>
+   <path stroke="#000000" fill="none" stroke-dasharray="23, 0" d="m184.9617,356c0.02553,52 -18.62837,78 -55.9617,78c-37.33334,0 -56,32.5 -56,97.5c0,65 28.56769,97.5 85.70306,97.5"/>
+   <g transform="rotate(91 NaN,NaN) ">
+    <polygon stroke="#000000" fill="#000000" points="187 352 193 349 193 355"/>
+   </g>
+   <g/>
+  </g>
+  <g>
+   <g>
+    <rect fill="#A8A8A8" fill-opacity="0.6" stroke-opacity="0.6" stroke-width="2" stroke="#A8A8A8" height="20" width="136.04969" y="710" x="166.70306"/>
+   </g>
+   <g>
+    <rect fill="#ffffff" stroke-width="2" stroke="#000000" height="20" width="136.04969" y="706" x="162.70306"/>
+   </g>
+   <g>
+    <rect fill="#A8A8A8" fill-opacity="0.6" stroke-opacity="0.6" stroke-width="2" stroke="#A8A8A8" height="20" width="136.04969" y="730" x="166.70306"/>
+   </g>
+   <g>
+    <rect fill="#ffffff" stroke-width="2" stroke="#000000" height="20" width="136.04969" y="726" x="162.70306"/>
+   </g>
+   <g>
+    <rect fill="#A8A8A8" fill-opacity="0.6" stroke-opacity="0.6" stroke-width="2" stroke="#A8A8A8" height="50" width="136.04969" y="750" x="166.70306"/>
+   </g>
+   <g>
+    <rect fill="#ffffff" stroke-width="2" stroke="#000000" height="50" width="136.04969" y="746" x="162.70306"/>
+   </g>
+   <g>
+    <text text-anchor=" middle" y="719" x="231.00001">
+     <tspan font-weight="bold" fill="#000000" font-family="Arial" font-size="12" xml:space="preserve">CobolElement</tspan>
+    </text>
+   </g>
+   <g/>
+   <g>
+    <text text-anchor=" start" y="761" x="164.70306">
+     <tspan fill="#000000" font-family="Arial" font-size="12" xml:space="preserve">text</tspan>
+    </text>
+    <text text-anchor=" start" y="775.8" x="164.70306">
+     <tspan fill="#000000" font-family="Arial" font-size="12" xml:space="preserve">ast</tspan>
+    </text>
+   </g>
+  </g>
+  <g>
+   <path stroke="#000000" fill="none" stroke-dasharray="23, 0" d="m199.40724,660c0.18266,16 -16.05934,24 -48.72601,24c-32.66667,0 -49,14.16669 -49,42.5c0,28.33337 20.34061,42.5 61.02184,42.5"/>
+   <g transform="rotate(101 NaN,NaN) ">
+    <polygon stroke="#000000" fill="#000000" points="201.681 656 207.681 653 207.681 659"/>
+   </g>
+   <g/>
+  </g>
+ </g>
+</svg>

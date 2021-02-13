@@ -1,0 +1,113 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="../media/style.css" rel="stylesheet" type="text/css" media="all" />
+<title>Modern Application Characteristics</title>
+</head>
+<body>
+<h1>Modern Application Characteristics</h1>
+A modern application should exhibit certain characteristics:
+<ul>
+  <li>Enable both cloud-based and on-premise deployment</li>
+  <li>Super-easy on-premise deployment and updating</li>
+  <li>Enable constant and non-interrupting updates, both in UI and back-end</li>
+  <li>Enable constant monitoring</li>
+</ul>
+At the same time, an app. expecting to offer all these also needs to be maintained with reasonable resource requirements. <br />
+<h2>Technology Stack</h2>
+<p>This leads me to think that following technology architecture is needed:</p>
+<ul>
+  <li>Java-based: in order to maximize on-promise deployment possibilities (and many resources: devs, info, software, ...)</li>
+  <li>Single-jar/war based: one file that can take care of install/de-install + running/updating.<br />
+    Deployment should be as easy as:</li>
+  <ul>
+    <li>Download file + run it</li>
+    <li>If it detects no prior install/config, it will optionally ask for config info and setup a local config file,<br />
+      (e.g. in <kbd>%USERPROFILE%\AppData\Roaming\&lt;MyCompany&gt;\&lt;MyApp&gt;</kbd> or <kbd>%SystemDrive%\ProgramData\MyCompany\MyApp</kbd> or <strike>the registry</strike> or /etc/&lt;MyApp&gt;)</li>
+    <li>(And un-install as simple as running the same file with an <kbd>--uninstall</kbd> option)</li>
+    <li>Or just start running if it was previously installed</li>
+  </ul>
+  <li>Web-UI based: everything is a web-UI currently and this really is the only viable option if going for both on-premise and cloud-based (and not wanting to develop two separate UIs). This leads to some interesting questions for the on-premise situation:</li>
+  <ul>
+    <li>App. needs to host its own built-in web-server (and possible also host a web-browser if we cannot assume that all machines have it?)</li>
+    <li>Jenkins/Hudson is THE example here: uses Winstone</li>
+  </ul>
+  <li>If persistent data is needed, a built-in DB should be used: Derby seems to be easiest?</li>
+</ul>
+So in summary:
+<ul>
+  <li>Java + Jetty or Winstone + Derby (+ Chrome)</li>
+</ul>
+<h2>On-premise Deployment and Install/Uninstall</h2>
+<p>More details:</p>
+<ul>
+  <li>A single jar/war file: <kbd>&lt;myapp&gt;-&lt;myapp-version&gt;.jar/war</kbd> [version number is important !!]</li>
+  <li>Can be used on command line: <kbd>--help</kbd>, <kbd>--version</kbd>, <kbd>--install</kbd>, <kbd>--update</kbd>, <kbd>--uninstall</kbd></li>
+  <li>Can be used by double-click too which will run it and:</li>
+  <ul>
+    <li>If not installed yet (check default locations: AppData or /etc): install + check for updates</li>
+    <li>If (just) installed: run server + start browser client (+ potentially - for chrome - also install 'the web app' as an app)</li>
+    <li>Uninstall/update can always be done from UI</li>
+    <li>Uninstall can also be done simply by removing the single jar + the config. location</li>
+  </ul>
+  <li>Config folder will be the folder containing the jar just started (so it is easy to pick a custom install location: just create a folder + move the jar into it) and contain:</li>
+  <ul>
+    <li>Jar file</li>
+    <li>Log file(s)</li>
+    <li>Config file(s)</li>
+    <li>Persistent data file(s)</li>
+    <li>Already downloaded updated jar file(s) [or old ones to make it easy to revert a failed update]</li>
+  </ul>
+  <li>About configuration:&nbsp;</li>
+  <ul>
+    <li>Based on textual (XML or Jython) files to make them easily 'hackable'</li>
+    <li>UI skinnability should be based on a configured path for CSS files (overriding the default ones, embedded in the install jar)</li>
+    <li>Same goes for I18N: help texts and all messages should be easily overridable</li>
+  </ul>
+  <li>What about non-interactive applications: command line utility-type apps or run-as-a-service-in-the-background type apps?<br />
+    Same as above, just don't start the browser client by default? <br />
+    The browser-UI would be more of a status dashboard, in the degenerate case even just an HTML-ified version of the log</li>
+</ul>
+<p>Questions:</p>
+<ul>
+  <li>Also support webapp-container deployment (e.g. in Tomcat, Glassfish, ...)? If so, where does config reside?<br />
+    Jenkins uses a <kbd>JENKINS_HOME</kbd> env. var to determine this.</li>
+</ul>
+<h2>Update Process</h2>
+<p>The update process will have common parts and parts that are specific to the on-premise situation.</p>
+<h3>Common Parts</h3>
+<p>The application knows about its complete 'update history' in the form of 'update scripts' that know how to update the app. from a certain version to higher version. These update scripts (which remain part of the app. jar/war) can:</p>
+<ul>
+  <li>Update/migrate config files: updating version reference, renaming or adding elements, deleting or commenting-out obsolete elements</li>
+  <li>Update/migrate data: both structure and data</li>
+</ul>
+The application only contains update scripts since the last main version number bump however, in order to 'minimize' the number of cruft/old stuff that needs to be kept: otherwise, old classes etc. that are not needed any more, need to be kept, just for the update process itself. <br />
+Reverse update scripts are not provided however since this is in general not always possible (e.g. how to re-introduce data that was deemed obsolete). Instead every execution of an update process will take a snapshot of the current app, including config and data, so that one can always revert to the exact state as it was just before the update process has started. <br />
+The <kbd>--update</kbd> and <kbd>--revert-update</kbd> processes can be started from command line or UI. <br />
+The<kbd> --revert-update</kbd> process will:
+<ol>
+  <li>Check that a snapshot of a previous version exists (E.g. <kbd>&lt;myapp&gt;-&lt;mypreviousversion&gt;-snapshot.zip</kbd>)</li>
+  <li>Re-install this snapshot (unzip)</li>
+  <li>Remove current/latest version changes entirely</li>
+</ol>
+The<kbd> --update</kbd> process will:
+<ol>
+  <li>Take a complete snapshot of the current version into a zip</li>
+  <li>Update config files and data-files by executing the correct (sequence of - if more than a single version was bumped) update scripts</li>
+</ol>
+<p>Questions:</p>
+<ul>
+  <li>Q: How to remove one-self or update one-self while running?<br />
+    A: Create 'script' in temp. folder and then execute the 'script' instead of one-self. Script can just be copy of entire software.<br />
+    See also:&nbsp;<a href="http://www.catch22.net/tuts/self-deleting-executables">http://www.catch22.net/tuts/self-deleting-executables</a></li>
+</ul>
+<h3>On-Premise Specific</h3>
+ The <kbd>--revert-update</kbd> process is equal to the general situation, the <kbd>--update</kbd> process however has some additional steps at the very beginning of the process:
+<ol>
+  <li>First of all, every time the app is run, check whether an update is available from a centrally configured server location<br />
+    So the app itself should now whether it is installed on-premise or not</li>
+  <li>If available, first download the update and then ask to install or not (unless run from --update CLI: then the answer is an implied YES)</li>
+</ol>
+</body>
+</html>

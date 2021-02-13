@@ -1,0 +1,336 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="../media/style.css" rel="stylesheet" type="text/css" media="all" />
+<title>A New Programming Language/Toolkit</title>
+</head>
+<body>
+<h1>A New Programming Language/Toolkit</h1>
+<h3>Current State of the Art</h3>
+<p>A modern programming toolkit consists of:</p>
+<ul>
+  <li>A programming language: a set of syntax rules and guidelines on how to express a certain computational behaviour</li>
+  <li>A base library: a basic set of functionality available to all programs written in the language (and potentially also in other languages)</li>
+  <li>A base toolkit containing compiler, debugger, profiler and documentation generator</li>
+</ul>
+<p>Examples: .NET, Java, Python, ...</p>
+<h3>Additional Goals for a new Programming Toolkit</h3>
+<ul>
+  <li>Allow both dynamic and static typing</li>
+  <li>Allow both compilation and interpretation (= on-the-fly compilation): source code = executable code, byte code = cache for faster startup/more optimization</li>
+  <li>Allow full API-access to the toolkit's tools: compiler, debugger, profiler, documentation generator</li>
+  <li>Allow complete execution freeze+persistence and later (potentially on other machine) resurrection/restart (e.g. continuations but on the VM level)</li>
+  <li>Base library should contain possibility to:</li>
+  <ul>
+    <li>Create source code</li>
+    <li>Parse source code</li>
+    <li>Validate source code</li>
+    <li>Execute source code (eval)</li>
+  </ul>
+  <li>API evolution should be built-in from the start: modular development, automated version management, mechanism to annotate 'obsolete' elements</li>
+  <li>Central information hub with: official docs, tutorials, Q&amp;A, toolkit downloads</li>
+  <li>Central code distribution hub ala CPAN, iPhone store: easy to upload library/application + voting + selling</li>
+  <li>Installation software should be standard too: webstart like over-the-web deployment + traditional install-format</li>
+</ul>
+<p>It must be:</p>
+<ul>
+  <li>Easy to install software: one way of packaging and installing software</li>
+  <li>Easy to find software: one central software hub</li>
+  <li>Easy to make software available (for download, for selling): one central software hub/store</li>
+  <li>Easy to create software</li>
+</ul>
+<p>But also:</p>
+<ul>
+  <li>Super-easy to create a new VM+Standard lib. implementation for a new platform: concrete, minimal non-portable impl. parts with concrete, well-documented interfaces</li>
+</ul>
+<h2>Modularity/Evolution</h2>
+<p>Different modularity aspects that should be handled:</p>
+<ul>
+  <li>Modularity of VM and standard library itself: split impl. from interfaces + make it super-easy to do a impl. on a new platform</li>
+  <li>Make a distinction between different versions and handle the 'DLL hell' case where different modules depend on different version of a commonly needed module</li>
+</ul>
+<h2>Terminology</h2>
+<p>A module is:</p>
+<ul>
+  <li>a versioned bundle of code and/or artefacts</li>
+  <li>a unit of deployment</li>
+  <li>the unit other modules can depend on</li>
+</ul>
+<p>A module has: </p>
+<ul>
+  <li>a name</li>
+  <li>a version: &lt;major&gt;.&lt;minor&gt;.&lt;patch&gt;</li>
+  <li>a build number: &lt;a number&gt;</li>
+  <li>a status: 'alpha', 'beta', 'release'</li>
+  <li>a type: 'implementation' or 'interface' (or 'abstract' and 'concrete')</li>
+  <li>a clear list of dependencies on version, build number and/or built type</li>
+  <li>a published/exposed API which also has a &lt;api name&gt; + &lt;api version&gt; + &lt;api status&gt;</li>
+  <li>a unique ID = hash of module contents</li>
+  <li>optionally a verified origin/author</li>
+  <li>optionally a clear description</li>
+</ul>
+<p>There are two types of modules:</p>
+<ul>
+  <li>Implementation modules: these actually offer real code/artefacts</li>
+  <li>Interface modules: these define an interface that other modules may implement/expose</li>
+</ul>
+<p>Module dependencies are always on interface modules (but implementation modules define their own interface always).</p>
+<p>E.g. foo module depends on 'windows-os 7.0 interface mod'</p>
+<h2>Dependencies</h2>
+<p>Version numbers should have a uniform form and meaning: &lt;major&gt;.&lt;minor&gt;.&lt;patch&gt;</p>
+<p> Dependencies can be of the form:</p>
+<ul>
+  <li>Dependency on module with certain name and version constraint (and also built type constraint)
+    <ul>
+      <li>Exact number: version=&lt;number&gt; (e.g. 2.6.15 or 1.0 or 0.8) </li>
+      <li>Number or higher: version=&lt;number&gt;+ (e.g. 2+ or 3.6+ or 4.5.30+)</li>
+      <li> Number range: version=&lt;number&gt;-&lt;number&gt; (e.g. 2.6-15 or 3-5 or 1.2.30-31)</li>
+    </ul>
+  </li>
+  <li>Dependency on any module which exposes certain API name + version
+    E.g. depends on any module exposing 'windows-os-api' version 7.0+ release</li>
+</ul>
+<p>What about diffs between 32bit&lt;&gt;64bit, processor types, os'es, ...? </p>
+<ul>
+  <ul>
+    <li> Expressed as dependencies on pseudo-modules like 32bit, 64bit, windows, linux, .... </li>
+    <li>A list of these must be created: windows-os-7.0.0-release, ubuntu-linux-2.3.0-release, ...</li>
+  </ul>
+</ul>
+<h2>What about the 'DLL Hell' / Diamond issue?</h2>
+<p>Only support one version of a particular module at runtime seems the easiest solution.</p>
+<p>But supporting multiple, where the identity of a module consists of both it's name and version, might be a better technical solution, together with a namespace/package naming convention containing the module's major version number. E.g. com.company.repository.[v1|v2|v3]?</p>
+<p>Should it be possible to make an 'ad-hoc' module that replaces two incompatible versions too?</p>
+<h2>Physical Format</h2>
+<p>Each module is a zip (or directory/folder) named &lt;module-name&gt;-&lt;module-version&gt;-&lt;build-type&gt;.mod</p>
+<p>Each zip contains one top-level info.mod which gives all the meta-data information about the module.</p>
+<p>The &lt;module-name&gt;, &lt;module-version&gt; and &lt;built-type&gt; must match the zip file name components, otherwise the module is considered 'corrupt'.</p>
+<h2>New Language Experiments</h2>
+<p>Goals:
+<ul>
+  <li>Learnability:</li>
+  <ul>
+    <li>Consistency</li>
+    <li>Simplicity</li>
+    <li>Familiarity to C/C#/Java/... devs: imperative languages (explicitly not functional like Haskel, Lisp, ...)</li>
+  </ul>
+  <li>Easy reflection + meta-programming (e.g. macro's working on AST level):
+    Stack frames should also be available via programming (to implement continuations and serialize whole processing threads)</li>
+  <li>Modularity</li>
+  <li>No inheritance (since I don't believe in hierarchies), only composition (traits?)</li>
+  <li>Structural typing (like duck typing)</li>
+  <li>No classes, only objects and factory objects (which are classes)</li>
+  <li>Comments are part of the syntax</li>
+  <li>No static &lt;&gt; non-static methods</li>
+  <li>Functions as first-class citizens</li>
+  <li>Objects as first-class citizens</li>
+  <li>Co-routines as first-class citizens?</li>
+  <li>Static typing (and dynamic typing?)</li>
+</ul>
+<p>Name: <code>simpa</code> (simple programming arsenal but also sympathic).</p>
+<p>A simple hello world program:
+<pre class="code">
+# A simple hello world program
+info(&quot;Hello World&quot;)
+</pre>
+<p>employee.si:
+<pre class="code">
+# An employee object:
+ 
+function employee(name: String, age: Integer = 0) -&gt; Employee:
+  var emp = System.new(Employee, name, age)
+  emp.increaseSalary(50)
+  return emp
+ 
+object Employee:
+ 
+  fun init(name: String, age: Integer = 0):
+    self._name = name
+    self._age = age
+ 
+  _name: String
+  _age: Integer
+
+
+# Somewhere in code:
+var emp = employee(&quot;Jos&quot;, 45)</pre>
+<h3>Source Code Text Files</h3>
+<p>A text file should be encoded in UTF-8.</p>
+<p>It must not contain any control characters or whitespace characters except space (0x20). So: no tabs! </p>
+<p>A text file is logically divided into zero (if the text file's length is zero) or more text lines, which are separated by an end-of-line character sequence. </p>
+<p>Following end-of-line character sequences are valid (and a mixture may be used although this is discouraged): </p>
+<ul>
+  <li>Carriage-return + Line-feed: 0x13 0x10</li>
+  <li>Line-feed: 0x10</li>
+</ul>
+<h3>Comments</h3>
+<p>Comments start with a sequence of two characters (# (0x??) and space (0x20)) and continue until the end of the line.</p>
+<p>If the hash character is not the first character on a line, it must be preceded by at least one space character.
+<pre class="code">
+<font color="#38761d" face="courier new, monospace"># This is a valid comment</font>
+<font color="#ff0000" face="courier new, monospace">#This is invalid: no space after the hash</font>
+<font color="#ff0000" face="courier new, monospace">abc# This is also invalid: no space before the hash and not first on the line</font>
+</pre>
+<p>Why not inline+multiline comments that have both a start and end delimiter? </p>
+<ul>
+  <li>For actual in-line comments: it's probably clearer to spread the to-be-commented syntax (e.g. function params) over multiple lines</li>
+  <li>For multi-line comments: if used for commenting out code: use the directives (which can nest) instead; if for having true multi-line comments, just use a sequence of single-line comments</li>
+</ul>
+Why space after (and before) the hash symbol: for readability and uniformity.
+<h3>Lexical Entities</h3>
+Design goal: have a minimal set of entities, avoiding any ambiguity and making it very simple to teach but also simple to implement a tokenizer.
+<ul>
+  <li>COMMENT: Either full-line or end-of-line comments as described above: include all characters up to but excluding the END-OF-LINE chars</li>
+  <li>WHITESPACE: Sequence of one or more consecutive space characters that are not part of a COMMENT</li>
+  <li>END-OF-LINE: The two possible end-of-line character sequences as described above</li>
+  <li>SYMBOL: Either an identifier or keyword, each of the following form:</li>
+  <ul>
+    <li>One or more ASCII characters of the set [A-Za-z0-9-]. So with a dash (-) as word separator and not the underscore since that type's easier</li>
+    <li>Must start with [A-Z] or [a-z] and must not start with or end with dash. No two consecutive dashes are allowed either.</li>
+    <li>An identifier must not be one of the reserved keywords</li>
+  </ul>
+  <li>NUMERIC-LITERAL: of the form [+-]?[0-9]+([.][0-9]+)?([e][+-]?[0-9]+)?</li>
+  <li>TEXT-LITERAL: of the form [&quot;]([^&quot;]|[\\&quot;])*[&quot;]: double-quoted text with an embedded double-quote escaped with the backslash</li>
+  <li>BOOLEAN-LITERAL: &quot;true&quot; or &quot;false&quot;</li>
+  <li>GROUP-START: &quot;{&quot;</li>
+  <li>GROUP-END: &quot;}&quot;</li>
+  <li>COMMA: &quot;,&quot;: a comma makes a list of n elements where n = number of comma's separated by non-comma's plus one</li>
+  <li>COLON: &quot;:&quot;, a colon makes a tuple of 2 elements</li>
+  <li>OPERATOR: any sequence of one or more non-space characters that are not one of the above lexical units</li>
+</ul>
+Standard library has a <code>SimpaParser</code> class offering full tokization and parsing functions.
+<h3>Reserved Keywords</h3>
+<p><span class="todo">{TODO}</span></p>
+<h3>Context-Sensitive Keywords</h3>
+<p><span class="todo">{TODO}</span></p>
+<h3>Primitive types</h3>
+<p>These are types with special syntactic support for writing literals or operations on value of the type. 
+  There are only two elementary primitive types:
+<ul>
+  <li>Number: with the NUMERIC-LITERAL for specifying literals and various arithmetic OPERATOR operators
+    E.g. <span class="code">125</span>, <span class="code">-9</span>, <span class="code">-12.2574e+3</span>, <span class="code">3.141596</span></li>
+  <li>Text: with the TEXT-LITERAL for specifying literals and the concatenation OPERATOR
+    E.g. <span class="code">&quot;some text&quot;</span>, <span class="code">&quot;a&quot;</span>, <span class="code">&quot;very many \&quot; quotes&quot;</span></li>
+</ul>
+In comparison with other programming languages, there is no special syntax to make a distinction between single characters and strings of characters. Also, there is no special syntax for distinguishing between the various numeric types. It's up to the compiler+runtime to determine the appropriate numeric usage. 
+And then there are collection primitive types:
+<ul>
+  <li>Lists: <pre class="code">list(12, 13, 14, 16)</pre>
+    Note: no special 'arrays'</li>
+  <li>Sets: <pre class="code">set(8, 9, 10)</pre></li>
+  <li>Dictionaries: <pre class="code">dict(&quot;a&quot;: 125, &quot;b&quot;: 126, &quot;c&quot;: 127)</pre></li>
+  <li>Tuples: <pre class="code">tuple(123, &quot;harry&quot;, date(14, 11, 1978))</pre></li>
+</ul>
+Actually these can all be interpreted as 'construction functions'
+<h3>Functions</h3>
+A function has a name, inputs and outputs and optionally a definition.
+<ul>
+  <li>Name: a valid SYMBOL that is not a reserved keyword</li>
+  <li>Inputs: a tuple of zero or more format arguments</li>
+  <li>Outputs: a tuple of zero or more formal arguments</li>
+</ul>
+<p>Examples:
+<pre class="code">
+max (a: int, # First arg
+     b: int  # Second arg
+    ) -> ( 
+     r: int  # The single result
+    ) {
+  if (a >= b) {
+    return a;
+  }
+  else {
+    return b;
+  }
+}
+ 
+number m = max(123, 458)
+ 
+print-line(format: string, object[] args) -> () { }
+ 
+print-line("help {0} and {1} escape, and also {2} !", "sam", "julie", "arnd")
+ 
+print-line "help {0} and {1} escape, and also {2} !", "sam", "julie", "arnd"
+ 
+divide(divisor: int, divident: int) -> (quotient: int, remainder: int) {
+  quotient = divisor / divident
+  remainder = divisor % divident
+}
+</pre>
+</p>
+<p>Without args: print-line print-line()</p>
+<p>With input but no output: print-line("help") print-line "help"</p>
+<p>With output but not input: time = current-timel time = current-time()</p>
+<p>With inputs and one output: m = max(1, 2, 3, 4)</p>
+<p>With inputs and outputs: sorted-list = sort(1, 3, 7, 2); (quotient, remainder) = divide(9,8)</p>
+<h4>Anonymous functions ~ lambda's</h4>
+<p>A function without a name: just input and output tuples + definition.  </p>
+<p>Function without args:
+<pre class="code">
+some-fun = () -&gt; (n: int) { n = 4; }
+n = som-fun ()
+</pre>
+<p>Function with one arg:</p>
+<pre class="code">
+some-fun = (a: int) -&gt; (n: int) { n = a +1; }
+</pre>
+<h2>Quick Reference</h2>
+<pre class="code">
+# Comments after hash-sign + space 
+  
+# The following are string literals:
+&quot;a string literal&quot;
+  
+# The following are numbers:
+123.4e+45 -455 0 
+ 
+# Elementary types:
+list1 = list(1, 255, 555, 77)
+list2 = [1, 255, 255, 77]
+dict1 = dict(&quot;a&quot; : 1, &quot;b&quot;: 2, &quot;c&quot;: 3)
+dict2 = {&quot;a&quot; : 1, &quot;b&quot;: 2, &quot;c&quot;: 3} 
+set1 = set(1, 244, 22, 1)
+set2 = ({1, 244, 22, 1}) 
+ 
+# Functions
+() -&gt; () { ... }
+ 
+{ ... } (arg1: arg1-type, arg2: arg2-type, ...) -&gt; () { ... }
+ 
+(arg1: arg1-type, arg2: arg2-type, ...) { ... }
+ 
+() -&gt; (ret1: ret1-type, ret2: ret2-type, ...) { ... }
+ 
+(arg1: arg1-type, arg2: arg2-type, ...) -&gt; (ret1: ret1-type, ret2: ret2-type, ...) { ... } 
+ 
+fundef ((params), (returns), (body))
+ 
+funcall(args) 
+ 
+function &lt;name&gt;&nbsp;
+{
+} 
+ 
+# Objects 
+object &lt;name&gt;&nbsp;
+{
+} 
+ 
+# Structural (above code-block level) &lt;&gt; code syntax 
+ 
+# if-function: 
+if (condition: boolean, then: action, else: action = {})
+ 
+if ((a == b), then: { ... }, else: { ... } )
+ 
+if (a==b)&nbsp;{ ... } else { ... } 
+ 
+# for-function: 
+for(init: action, condition: boolean, after: action, loop: action)
+ 
+for ( {i = 1}, {i &lt;= 2}; {i++} ) {
+}
+</pre>
+</body>
+</html>

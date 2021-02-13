@@ -1,0 +1,282 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Vision Statement</title>
+</head>
+
+<body>
+<h1>Vision Statement</h1>
+<h4>The Intro</h4>
+<div><br>
+</div>
+<div>As long as I work here, we are working with COBOL:
+<div>
+<ol style="list-style-type:decimal"><li>We migrate from COBOL dialect A to dialect B (e.g. BS2000 COBOL to MFCobol, Wang COBOL to MFCobol, Enterprise COBOL to Fujitsu COBOL)</li>
+<li>We create frameworks in COBOL (e.g. Wang framework, CODASYL framework)</li>
+<li>We generate COBOL components and frameworks (e.g. Anugen IO modules, IDMS map modules, CODASYL IO modules, ...)</li>
+</ol>
+<div><br>
+</div>
+<div>
+<h4 style="margin:5px 0px;color:rgb(51,51,51)">The Opportunity</h4>
+<div><br>
+</div>
+<div>COBOL is the most-used programming language in the world: billions of lines of code are being maintained in thousands of companies all over the world. So it is inevitable that for decades to come companies will have to deal with COBOL:</div>
+<div>
+<ul><li>Some will want to migrate away completely (to Java, C# or some other mainstream language)</li>
+<li>Some will want to rehost their code (Enterprise COBOL or COBOL2000 on mainframe to MF or Fujitsu Cobol on Linux or Windows)</li>
+<li>Those that actively keep working with COBOL will want tools to analyze, document and refactor their codebase</li></ul>
+<div><br>
+</div>
+</div>
+</div>
+</div>
+</div>
+<h4>The Frustration</h4>
+<div><br>
+</div>
+<div>
+<div>As long as I work here, we complain about our lack of COBOL tools:</div>
+<div>
+<ol><li>For analysis: no COBOL parser that works with multiple dialects (so we fall back to doing grep's and wc's to have a rough idea)</li>
+<li>For analysis/conversion: no flexible tool for estimating the impact of certain changes (e.g. change type of DBKEY variable)</li>
+<li>For analysis/conversion: no flexible tool for seeing which programs call each other&nbsp;</li>
+<li>For analysis/conversion: no flexible tool for finding programs that exhibit a certain problem (e.g. programs that use DBKEY vars that are used in MOVE statements)</li>
+<li>For conversion: no full (context) parser that can also regenerate the original layout (e.g. Bramblings is not full-context aware, the COCOs cannot regenerate the original layouts)</li>
+<li>For conversion: no parser that can accept multiple COBOL dialects (e.g. clumsy Knot-scripts for COBOL2000 and also Enterprise COBOL)</li>
+</ol>
+<div>And we are not the only ones that need extended COBOL parsing/analysis tools:</div>
+<div>
+<ol><li>Swets has acquired a tool that analyzes where variables are used, which copybooks are unused, etc. ...</li>
+<li>All our customers ask how they can easily find out which programs need to be recompiled when we regenerate certain artefacts</li>
+<li>If they knew they could, all customers would also ask for an automatic analysis of 'dead code' at the start of a project: just analyzing the copybooks, variables, sections and paragraphs that don't appear to be used anywhere.</li>
+</ol>
+<div><br>
+</div>
+<h4><font color="#000000" size="3"><span style="font-size:13px;font-weight:normal;line-height:16px"><font color="#333333" size="4"><span style="font-size:15px;line-height:normal"><b>The Proposal</b></span></font></span></font></h4>
+<div><br>
+</div>
+<div>Let's make a set of COBOL tools that we can benefit from internally, and make money from externally. And that gives us back the opportunity to actually sell tools as products and not just as part of projects.</div>
+<div><br>
+</div>
+<div>I can see this happening in 4 phases:</div>
+<div><br>
+</div>
+<h4><br>
+</h4>
+<h4>Phase 1: The Basics</h4>
+<div><br>
+</div>
+<div>We make a flexible COBOL lexer/preprocessor/parser that can parse all code that resembles COBOL: those parts that it recognizes as valid COBOL syntax are parsed completely, and the other pieces are categorized as 'UNKNOWN PIECE OF CODE'. We also enable the creation of parser plugins that get a chance to inspect those parts marked as 'UNKNOWN PIECE OF CODE': plugins for embedded SQL and CICS are obvious candidates to be developed.</div>
+<div><br>
+</div>
+<div>The result of this phase is a basic COBOL tools SDK and associated documentation on how to use and built on these pieces.</div>
+<div><br>
+Estimates:
+<blockquote>
+<table border="1" bordercolor="#888888" cellspacing="0" style="border-color:rgb(136,136,136);border-width:1px;border-collapse:collapse">
+<tbody>
+<tr>
+<td style="width:149px;height:16px">Lexer<br>
+</td>
+<td style="text-align:right;width:60px;height:16px">5d<br>
+</td>
+</tr>
+<tr>
+<td style="width:149px;height:16px">Preprocessor<br>
+</td>
+<td style="text-align:right;width:60px;height:16px">5d<br>
+</td>
+</tr>
+<tr>
+<td style="width:149px;height:16px">Parser<br>
+</td>
+<td style="text-align:right;width:60px;height:16px">25d<br>
+</td>
+</tr>
+<tr>
+<td style="width:149px;height:16px">SDK + Docs<br>
+</td>
+<td style="text-align:right;width:60px;height:16px">10d<br>
+</td>
+</tr>
+<tr>
+<td style="width:149px;height:29px">POC for ESQL Plugin<br>
+</td>
+<td style="text-align:right;width:60px;height:29px">10d<br>
+</td>
+</tr>
+<tr>
+<td style="width:149px;height:16px"><b>Total<br>
+</b>
+</td>
+<td style="text-align:right;width:60px;height:16px"><b>55d<br>
+</b>
+</td>
+</tr>
+</tbody>
+</table>
+</blockquote>
+</div>
+<h4><br>
+</h4>
+<h4>Phase 2: Publicity and Maturity</h4>
+<div><br>
+</div>
+<div>The only way of making the basic components from phase 1 good enough so they can be sold as a package to 'conversion partners' is making them work on as many COBOL sources from as many dialects as possible. So ideally we need big amounts of COBOL code to run on. And we need publicity...</div>
+<div><br>
+</div>
+<div>So we make our first online application, which will be highly successful because:</div>
+<div>
+<ul><li>It will be completely free (of charge)</li>
+<li>It will provide a complete hyperlinked COBOL grammar (which appears to be a rare good)</li>
+<li>It will allow anyone to create an account, upload a zip of COBOL sources and then get back:</li>
+<ul><li>General statistics: line counts, statement counts, non-standard syntax, ...</li>
+<li>A full hyperlinked view of the uploaded sources: variable definitions are linked to all use-locations, variable uses are linked to the definitions, goto and perform statements are linked to their target paragraphs, ...</li></ul>
+<li>And it will be unique in its kind (as far as I know)<br>
+</li></ul>
+<div>All 'UNKNOWN PIECE OF CODE' parts found in uploaded sources will be automatically detected and reported, giving us the chance to improve our basic (parsing) components.</div>
+<div><br>
+</div>
+<div>Note: For internal use, this webapp will already cover most of our needs when it comes to analyzing COBOL sources during a PMA.</div>
+</div>
+<div><br>
+Estimates:
+<blockquote>
+<table border="1" bordercolor="#888888" cellspacing="0" style="border-color:rgb(136,136,136);border-width:1px;border-collapse:collapse">
+<tbody>
+<tr>
+<td>Basic Webapp (login + storage + invoke tools)
+</td>
+<td style="text-align:right;width:60px">20d<br>
+</td>
+</tr>
+<tr>
+<td>Statistics
+</td>
+<td style="text-align:right;width:60px">5d<br>
+</td>
+</tr>
+<tr>
+<td>Hyperlinked COBOL grammar
+</td>
+<td style="text-align:right;width:60px">10d<br>
+</td>
+</tr>
+<tr>
+<td>Hyperlinked COBOL source view
+</td>
+<td style="text-align:right;width:60px;height:29px">15d<br>
+</td>
+</tr>
+<tr>
+<td><b>Total
+</b></td>
+<td style="text-align:right;width:60px"><b>50d<br>
+</b></td>
+</tr>
+</tbody>
+</table>
+</blockquote>
+</div>
+<h4><br>
+</h4>
+<h4>Phase 3: Refactoring (Online)</h4>
+<div><br>
+</div>
+<div>The next logical (but technically also the most challenging) step is adding extended analysis and refactoring support:<br>
+<ul><li>Variable/Section/Copybook/Paragraph renaming: automatically applied in all possible locations</li>
+<li>Find all locations impacted by changing the type of a variable<br>
+</li>
+<li>Dead code detection and removal: vars/sections/copybooks/paragraphs that are not called anywhere</li>
+<li>Formatting (ie. pretty-printing) of code</li></ul>
+</div>
+<div>All of this functionality will first be added to the Cobol Tooks SDK, so internally we can benefit from it directly and the library can be offered for pay as a product-extension to 'conversion partners'.</div>
+<div><br>
+</div>
+<div>Next to that, the webapp of phase 2 will be extended and commercialized: the extra functionality will be made available at a price that is in proportion to the LOC being worked on. It will now be possible to not only upload code and analyze it, but also apply refactorings and custom edits, and then download the results again. <br>
+</div>
+<div><br>
+</div>
+<div>Two other ways in which we will try to make money of this:</div>
+<div>
+<ul><li>We will offer to create custom analysis/refactoring functions&nbsp;</li>
+<li>We will license the whole webapp as a packaged product</li></ul>
+<br>
+Estimates:
+<blockquote>
+<table border="1" bordercolor="#888888" cellspacing="0" style="border-color:rgb(136,136,136);border-width:1px;border-collapse:collapse">
+<tbody>
+<tr>
+<td style="width:326px;height:16px">Whitespace-preserving rewriting</td>
+<td style="text-align:right;width:60px;height:16px">20d<br>
+</td>
+</tr>
+<tr>
+<td style="width:326px;height:16px">Variable/Section/... renaming
+</td>
+<td style="text-align:right;width:60px;height:16px">5d<br>
+</td>
+</tr>
+<tr>
+<td style="width:326px;height:16px">Find all locations...</td>
+<td style="text-align:right;width:60px;height:16px">10d<br>
+</td>
+</tr>
+<tr>
+<td style="width:326px;height:16px">Dead code detection
+</td>
+<td style="text-align:right;width:60px;height:16px">25d<br>
+</td>
+</tr>
+<tr>
+<td style="width:326px;height:16px">Pretty-printing <br>
+</td>
+<td style="text-align:right;width:60px;height:16px">&nbsp;20d</td>
+</tr>
+<tr>
+<td style="width:326px;height:16px">Integration in webapp</td>
+<td style="text-align:right;width:60px;height:16px">&nbsp;40d</td>
+</tr>
+<tr>
+<td style="width:326px;height:16px">Accounting in webapp for commercialization</td>
+<td style="text-align:right;width:60px;height:16px">&nbsp;20d</td>
+</tr>
+<tr>
+<td style="width:326px;height:16px">Marketing/publicity for webapp</td>
+<td style="text-align:right;width:60px;height:16px">&nbsp;10d</td>
+</tr>
+<tr>
+<td style="width:326px;height:16px"><b>Total
+        </b></td>
+<td style="text-align:right;width:60px;height:16px"><b>140d<br>
+</b></td>
+</tr>
+</tbody>
+</table>
+</blockquote>
+<br>
+<h4>Phase 4: &nbsp;Cobol to Java !</h4>
+<div><br>
+</div>
+<div>Of course: 1-to-1 COBOL to ugly COBOL-feeling Java</div>
+<div><br>
+</div>
+<div>But the extended COBOL analysis/refactoring support of phase 3 also let's us go further:&nbsp;</div>
+<div>
+<ul><li>Change COBOL variable types to native Java types when it is determined that it cannot hurt</li>
+<li>Don't convert dead code</li>
+<li>Detect GO TO's that just implement a while-loop</li>
+<li>Detect sequences of MOVE/SET statements followed by a CALL as a singly API-call (as we introduce ourselves during our migrations)</li>
+<li>Interactively ask the 'conversion specialist' on what to do when there is a choice between an ugly-but-sure and an pretty-but-limited-risk option for migrating a specific construct (and also record these choices so they only have to be made once)</li>
+<li>...</li></ul>
+<div>Integrating this into the webapp, in which one can link from the generated Java to the original COBOL construct and vice versa ... would definitely make for a compelling demo and sales argument !</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</body>
+</html>

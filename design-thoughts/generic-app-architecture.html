@@ -1,0 +1,783 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="../media/style.css" rel="stylesheet" type="text/css" media="all" />
+<title>Generic Application Architecture</title>
+</head>
+<body>
+<h1>Generic Application Structure</h1>
+<p>Is there a generic application structure that underlies or could be used for most software? Let's pretend there is and see what it would look like.</p>
+<h2>TOC</h2>
+<ul>
+  <li><a href="#high_level_structure">High-Level Structure</a></li>
+  <li><a href="#nonfunctional_reqs">Non-Functional Requirements</a></li>
+  <li><a href="#architectural_choices">Architectural Choices</a>
+    <ul>
+      <li><a href="#data_types">File &amp; Data Storage Types</a></li>
+      <li><a href="#communication_protocols">Communication Protocols</a></li>
+      <li><a href="#concurrency">Concurrency</a></li>
+      <li><a href="#distribution_and_upgrade">Software Distribution &amp; Upgrade</a></li>
+    </ul>
+  </li>
+  <li><a href="#concrete_examples">Concrete Examples</a></li>
+  <li><a href="#unfinished_thoughts">Unfinished Thoughts</a></li>
+</ul>
+<h2><a name="high_level_structure" id="high_level_structure"></a>High-Level Structure</h2>
+<p>Most apps (OS-level background services, web services, web apps, CLI apps, rich client apps) can be structured as follows:</p>
+<ol>
+  <li>A <strong>front-end</strong> (CLI, Javascript with CSS/HTML, rich client technology):
+    <ol>
+        <li>Offers main UI allowing users to re<span class="style1">quest:</span>
+            <ol>
+              <li><span class="style1"> tasks to be started/executed and </span></li>
+              <li><span class="style1">information/data to be queried/presented</span></li>
+            </ol>
+        </li>
+      <li>Which can cater both to normal and admin users</li>
+      <li>Translates each request for task execution or data retrieval into a request to the <strong>back-end</strong> (which doesn't need to know which front-end it is interacting with if all requests have the same structure)</li>
+    </ol>
+  </li>
+  <li>A <strong>back-end</strong> which offers the main 'processing logic' and itself consists of multiple components:
+    <ol>
+        <li><strong>Request processor</strong> which validates <strong>front-end</strong> requests and either:
+          <ol>
+              <li>directly serve back the data being requested or</li>
+            <li> turns them into tasks to be executed, while serving back a reference to this task (= async processing: if a front-end wants to only offer synchronous operations, it needs to provide a UI - e.g. progress bar - while waiting for the task to complete, which it will need to poll for)</li>
+          </ol>
+        </li>
+      <li><strong>Task scheduler</strong> that runs and manages the execution of tasks, making their results available for future retrieval</li>
+      <li><strong>Cache</strong> keeping previously computed results and data for direct retrieval</li>
+      <li><strong> Repository</strong> for storing/updating/retrieving permanent data, including configuration settings (could be config files, an embedded or standalone database)</li>
+      <li><strong>Journal</strong> for enabling fault-resistance (also called  'activity/undo/redo-log' for DB-alike software)</li>
+      <li><strong>Auditing log</strong> for keeping track of all activities for auditing and diagnostic purposes (mostly just called 'the log')</li>
+    </ol>
+  </li>
+</ol>
+<h2><a name="nonfunctional_reqs" id="nonfunctional_reqs"></a>Non-Functional Requirements</h2>
+<p>All apps should provide following non-functional characteristics:</p>
+<ol>
+  <li><strong>Fault-tolerance</strong>:
+    <ol>
+        <li>Killing the back-end (e.g. kill -9) at any time can be done without permanent harm (due to activity log + recovery code)</li>
+      <li>Infrastructure failing (except for the repository or activity log getting corrupted or deleted) at any time can be recovered from without permanent harm</li>
+    </ol>
+  </li>
+  <li><strong>Auditability</strong>:
+    <ol>
+        <li>All state-changing activities are recorded (in the auditing log) and can be investigated in real time or later</li>
+      <li>There is never uncertainty about what the app. is currently doing (not 'UI has freezed and don't know whether app. is doing anything')</li>
+    </ol>
+  </li>
+  <li><strong>Ease of operation</strong>:
+    <ol>
+        <li>Easy install/un-install (preferably a simple copy/delete operation; always clear version number; semantic versioning)</li>
+      <li>Easy upgrade (preferably automatic or based on copy)</li>
+      <li>Easy issue determination (clear error IDs with clear explanation and context from activity log or UI)</li>
+      <li>Easy (preferably 'life', while the app. is running) configuration of logging parameters (what is being logged, at which verbosity level)</li>
+      <li>Easy consolidation (log rotation, ...) and querying of activity logs (simple, easy to aggregate and query log format)</li>
+      <li>Use of file-formats and protocols for which general-purpose tools exist</li>
+      <li>Cross-platform install and operation</li>
+    </ol>
+  </li>
+  <li><strong>Ease of use</strong>:
+    <ol>
+        <li>Clear focus and functionality</li>
+      <li>Consistent terminology</li>
+      <li>Clear description of functionality and normal/abnormal conditions</li>
+      <li>Good reponsiveness: no 'hangs' and immediate (&lt; 0.8s) feedback to all user actions</li>
+      <li>Searchable and context-sensitive settings and help</li>
+    </ol>
+  </li>
+</ol>
+<h2><a name="architectural_choices" id="architectural_choices"></a>Architectural Choices</h2>
+<h3><a name="data_types" id="data_types"></a>File &amp; Data Storage Types</h3>
+<p>Context Requirements &amp; Matching Choices:</p>
+<ul>
+  <li><strong>For journal</strong>:
+    <ul>
+      <li>Needs: fail-safe, mostly appending</li>
+      <li>Choices: binary file-format, text files, xml files, json files, dsl text files, RDBMS</li>
+      <li>Typical choice: binary file-format</li>
+      <li>My choice: RDBMS if already in use or else JSON since it strikes a nice balance between both being human readable and easy to encode/decode typical data structures</li>
+    </ul>
+  </li>
+</ul>
+<ul>
+  <li><strong>For auditing log</strong>:
+    <ul>
+      <li>Needs: fail-safe, append-only, easy to search and combine, easy to monitor</li>
+      <li>Choices: text files with specific format, csv files, xml files, json files, dsl text files, RBMS, OS event log</li>
+      <li>Typical choice: text file with timestamp line-based format</li>
+      <li>My choice: JSON for being both easy to process as structured content while still being human-readable and easy to write-out in an append-only way</li>
+    </ul>
+  </li>
+</ul>
+<ul>
+  <li><strong>For permanent data repository</strong>:
+    <ul>
+      <li>Needs: fail-safe updates, easy querying, high performance (data throughput) for most used operation: query or update</li>
+      <li>Choices: RDBMS, NOSQL DB, binary file-format, xml files, json files, dsl text files</li>
+      <li>Typical choice: RDBMS</li>
+      <li>My choice: RDBMS (certainly if data relations need to be used extensively or the data is to be used from multiple applications concurrently)</li>
+    </ul>
+  </li>
+</ul>
+<ul>
+  <li><strong>For configuration repository</strong>:
+    <ul>
+      <li>Needs: easy editing, human-readable format, mostly read and only sporadically edited/updated</li>
+      <li>Choices: RDBMS, NOSQL DB, binary file-format, xml files, json files, properties files, ini files, Windows registry, dsl text files</li>
+      <li>Typical choice: XML files</li>
+      <li>My choice:
+        <ul>
+          <li> For user-specific settings: the permanent data repository</li>
+          <li>For installation-specific (typically configured only once) settings: JSON since it is easier to process than XML, yet remaining equally human-readable and editable</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+<ul>
+  <li><strong>Help docs</strong>: 
+    <ul>
+      <li>Needs: accurate, context-sensitive help, targeted at specific audience; in multiple languages; easy to search via 'search' and 'index'</li>
+      <li>Choices: online web pages, PDF, MSDN or JavaHelp-style package</li>
+      <li>Typical choice: web pages for web apps, MSDN/JavaHelp for desktop apps</li>
+      <li>My choice: web pages but only if good 'search' and 'index' can be ensured, and they can be made 'printer-friendly'</li>
+    </ul>
+  </li>
+</ul>
+<h3><a name="communication_protocols" id="communication_protocols"></a>Communication Protocols</h3>
+<p>Context Requirements &amp; Matching Choices:</p>
+<ul>
+  <li><strong>Comm. between Front-end and Back-end</strong>:
+    <ul>
+      <li>Needs: typically synchronous comm and further depends on implementation technology, whether front-end and back-end live in the same process or not</li>
+      <li>Choices:
+        <ul>
+          <li> in-process method invocations</li>
+          <li> inter-process RMI</li>
+          <li>inter-process pipes</li>
+          <li> inter-process sockets:
+            <ul>
+              <li>custom binary TCP/IP protocol</li>
+              <li>SOAP</li>
+              <li>HTTP with form-encoded data</li>
+              <li>HTTP with XML docs</li>
+              <li>HTTP with JSON docs</li>
+            </ul>
+          </li>
+          <li>inter-process messaging via middleware (MQ, JMS, ...)</li>
+        </ul>
+      </li>
+      <li>Typical choice: either in-process method invocations or HTTP</li>
+      <li>My choice: either in-process method invocations or HTTP with JSON doc</li>
+    </ul>
+  </li>
+</ul>
+<ul>
+  <li><strong>Comm. between independent back-end processes</strong>:
+    <ul>
+      <li>Needs: both sync. and async. comm., performance measured by latency and data throughput</li>
+      <li>Choices:
+        <ul>
+          <li> inter-process RMI</li>
+          <li>inter-process pipes</li>
+          <li> inter-process sockets:
+            <ul>
+              <li>custom binary TCP/IP protocol</li>
+              <li>SOAP</li>
+              <li>HTTP with form-encoded data</li>
+              <li>HTTP with XML docs</li>
+              <li>HTTP with JSON docs</li>
+            </ul>
+          </li>
+          <li>inter-process messaging via middleware (MQ, JMS, ...)</li>
+        </ul>
+      </li>
+      <li>Typical choice: inter-process messaging via middleware</li>
+      <li>My choice: HTTP with JSON doc, since this means each process can be seen as a web service</li>
+    </ul>
+  </li>
+</ul>
+<h3><a name="concurrency" id="concurrency"></a>Concurrency</h3>
+<ul>
+  <li>Needs: max. performance and responsiveness by max. the amount of work that happens in parallel</li>
+  <li>Choices: threads or processes</li>
+  <li>Typical choice: threads if possible</li>
+  <li>My choice: 
+    depends on specific needs
+    <ul>
+      <li>Threads if: ensuring all get cleaned up is important; complex and big data structures need to be operated on concurrently</li>
+      <li>Processes if: visibility and manipulation (e.g. kill, monitor) by external tools is important</li>
+    </ul>
+  </li>
+</ul>
+<h3><a name="distribution_and_upgrade" id="distribution_and_upgrade"></a>Software Distribution &amp; Upgrade</h3>
+<ul>
+  <li>Needs: easy to distribute and upgrade frequently without losing settings/data</li>
+  <li>Choices: MSI or setup.exe for desktop sofware, sofware-as-a-service for web apps</li>
+  <li>Typical choice: software-as-a-service if possible</li>
+  <li>My choice: 
+    software-as-a-service as it entails max. control over backward compatibility needs and the upgrade process itself, while also giving max. useability metrics</li>
+</ul>
+<h2><a name="concrete_examples" id="concrete_examples"></a>Concrete Examples</h2>
+<p>Applied to some possible sample apps:</p>
+<table width="100%" border="1" cellspacing="0" cellpadding="2">
+  <tr>
+    <th width="12%">What</th>
+    <th width="22%">Daily Counters</th>
+    <th width="17%">TimeTracker </th>
+    <th width="15%">Migratonomy</th>
+    <th width="16%">Turnstone</th>
+    <th width="18%">PMS</th>
+  </tr>
+  <tr>
+    <td>Purpose</td>
+    <td width="22%"><p>Count stuff on a daily basis, providing stats on counts reached over time.</p>    </td>
+    <td width="17%"><p>Allows daily time activity entry, and reports on past activities.</p>    </td>
+    <td width="15%"><p>Schedule and execute migration steps, ensuring 100% auditability and optionally also optimizing throughput.</p>    </td>
+    <td width="16%"><p>Import and analyze static source artefacts leading to the online query and offline generation of inter-linked analysis reports for both internal use and external presentation.</p>    </td>
+    <td width="18%"><p>Manage a pool of processes in order restrain resource usage and  win startup and initialization time.</p>    </td>
+  </tr>
+  <tr>
+    <td>Use cases</td>
+    <td><ul>
+      <li>Count [smokes|callories|coffees|laps run|...] per day</li>
+      <li>Summarize evolution of counts over time</li>
+      <li>Set target (min. or max.) counts</li>
+    </ul></td>
+    <td><ul>
+      <li>Add work hours per day</li>
+      <li>Calculate overtime balance per employee</li>
+      <li>Summarize time spent on certain activities</li>
+    </ul></td>
+    <td><ul>
+      <li>Run all IDMS data migration steps asap</li>
+      <li>Run all migration steps asap, notifying operators of needed interventions like manual work or checks</li>
+      <li>Visualize current status</li>
+      <li>Summarize throughput and error stats</li>
+    </ul></td>
+    <td><ul>
+      <li>Analyze missing sources</li>
+      <li>Analyze sub-application interdependencies</li>
+      <li>Analyze resource usage</li>
+      <li>Generate a questionnaire based on technologies found in analysis data</li>
+      <li>Allow annotating specific source artefacts or reports</li>
+    </ul>    </td>
+    <td><ul>
+      <li>CICS or IDMS or Natural migrations to a no-TP architecture where each session needs a process with DB connection to perform actual work.</li>
+      <li>Migratonomy steps running in separate processes</li>
+    </ul>    </td>
+  </tr>
+  <tr>
+    <td>Front-end</td>
+    <td width="22%"><ul>
+      <li>Android UI</li>
+      <li> Web app</li>
+    </ul></td>
+    <td width="17%"><ul>
+      <li>Web app</li>
+      <li>Partial CLI</li>
+    </ul></td>
+    <td width="15%"><ul>
+      <li>Web app</li>
+      <li>CLI</li>
+    </ul></td>
+    <td width="16%"><ul>
+      <li>Web app</li>
+      <li>CLI</li>
+    </ul></td>
+    <td width="18%"><ul>
+      <li>Web service API</li>
+      <li>Partial CLI</li>
+    </ul></td>
+  </tr>
+  <tr>
+    <td>Possible Tasks</td>
+    <td width="22%">Normal use:
+      <ul>
+        <li>Login / logout</li>
+        <li>Add value to counter</li>
+        <li>Set value of counter</li>
+        <li>Export values as csv</li>
+        <li>Summarize stats per week, month or year</li>
+      </ul>
+      <p>Privileged use:</p>
+      <ul>
+          <li>Create/delete/edit users accounts</li>
+        <li>Take data backup</li>
+        <li>Import data backup</li>
+        <li>Upgrade software</li>
+      </ul>
+    <p>&nbsp;</p></td>
+    <td width="17%">Normal use:
+    <ul>
+          <li>Login / logout</li>
+        <li>Add new activity time</li>
+        <li>Request activity suggestions for particular day (based on other user's descriptions or ETS usage)</li>
+        <li>Edit uncompleted activity's</li>
+        <li>Complete activities of a certain day</li>
+      </ul>
+      <p>Privileged use:</p>
+      <ul>
+          <li>Show activities of particular day</li>
+        <li>Show activities of certain users on a particular day</li>
+        <li>Show batch report</li>
+        <li>Query activity data by configuring filters</li>
+        <li>Approve or un-complete activities of certain users</li>
+        <li>Take data backup</li>
+        <li>Import data backup</li>
+        <li>Upgrade software</li>
+      </ul>
+    <p></p></td>
+    <td width="15%">Normal use:
+    <ul>
+          <li>Login / logout</li>
+        <li>Summarize all running/active processes</li>
+        <li>Summarize and visualize a process' status</li>
+        <li>Monitor process steps and start asap</li>
+        <li>Force a  process step to start or stop</li>
+        <li>Enter 'start data' for a process step so it can start</li>
+      </ul>
+      <p>Privileged use:</p>
+      <ul>
+          <li>Configure a workflow process</li>
+        <li>Start/stop a workflow process</li>
+        <li>Take data backup</li>
+        <li>Import data backup</li>
+        <li>Upgrade software</li>
+    </ul></td>
+    <td width="16%"><p>Normal use: </p>
+        <ul>
+          <li>Login / logout</li>
+          <li>Retrieve and show batch reports</li>
+          <li>Retrieve and show questionnaires</li>
+          <li>Add notes to reports or data</li>
+          <li>Query analysis data by configuring filters</li>
+        </ul>
+      <p>Privileged use:</p>
+      <ul>
+          <li>Import data</li>
+        <li>Run analysis &amp; generation tasks</li>
+        <li>Generate batch reports</li>
+        <li>Take data backup</li>
+        <li>Import data backup</li>
+        <li>Upgrade software</li>
+    </ul></td>
+    <td width="18%">Normal use:
+      <ul>
+        <li>Provide stats</li>
+        <li>Start task of certain type</li>
+        <li>Kill a running task</li>
+        <li>Send/receive data to/from a task</li>
+      </ul>
+      <p>Privileged use:</p>
+      <ul>
+          <li>Initiate shutdown in which no new task requests will be fulfilled</li>
+        <li>(Re)Configure task types</li>
+        <li>Upgrade software</li>
+      </ul>
+    <p>&nbsp;</p></td>
+  </tr>
+  <tr>
+    <td>Processing State Data</td>
+    <td><ul>
+      <li>In-memory: session state</li>
+    </ul></td>
+    <td><ul>
+      <li>In-memory: session state</li>
+    </ul></td>
+    <td><ul>
+      <li>In-memory: session state</li>
+      <li>In-memory: process state, including running processes and process steps</li>
+    </ul></td>
+    <td><ul>
+      <li>In-memory: session state</li>
+    </ul></td>
+    <td><ul>
+      <li>In-memory: Managed processes info</li>
+    </ul></td>
+  </tr>
+  <tr>
+    <td>Permanent State Data</td>
+    <td width="22%"><ul>
+      <li>RDBMS: User accounts</li>
+      <li>RDBMS: Count definitions per user</li>
+      <li>RDBMS: Counts per user and per day</li>
+      <li>RDBMS: Per-user UI preferences &amp; report links</li>
+    </ul>      </td>
+    <td width="17%"><ul>
+      <li>RDBMS: User accounts</li>
+      <li>RDBMS: Timesheet data per user</li>
+      <li>RDBMS: Timesheet data fields</li>
+      <li>RDBMS: Timesheet workflow configuration</li>
+      <li>RDBMS: Per-user UI preferences &amp; report links</li>
+      <li>RDBMS: Cached reports info (meta-data to understand when cached results are no longer valid)</li>
+    </ul>    </td>
+    <td width="15%"><ul><li>RDBMS: User accounts</li>
+        <li>JSON files: Project (= workflow) definitions, including task type definitions &amp; visualization info</li>
+    </ul>    </td>
+    <td width="16%"><ul><li>RDBMS: User accounts</li>
+        <li>RDBMS: Annotations per artefact type</li>
+        <li>RDBMS: Analysis data</li>
+      <li>RDBMS: Analysis configuration data</li>
+      <li>RDBMS: Cached reports info (meta-data to understand when cached results are no longer valid)</li>
+    </ul>    </td>
+    <td width="18%"><ul>
+      <li>None</li>
+    </ul>      <p>&nbsp;</p>      </td>
+  </tr>
+  <tr>
+    <td>Read-only Data</td>
+    <td><ul>
+      <li>JSON: Basic connectivity, locations and logging verbosity config</li>
+    </ul></td>
+    <td><ul>
+      <li>JSON file: available report-types configuration</li>
+      <li>JSON file: Basic connectivity, locations and logging verbosity config</li>
+      <li>Files: reporting templates</li>
+    </ul></td>
+    <td><ul>
+      <li>JSON file: Basic connectivity, locations and logging verbosity config</li>
+      <li>JSON files: project definition templates</li>
+    </ul></td>
+    <td><ul>
+      <li>JSON file: analysis and reporting task-types configuration</li>
+      <li>JSON file: Basic connectivity, locations and logging verbosity config</li>
+      <li>Files: reporting templates</li>
+    </ul></td>
+    <td><ul>
+      <li>JSON file: task-types configuration</li>
+      <li>JSON file: Basic connectivity, locations and logging verbosity config</li>
+    </ul></td>
+  </tr>
+  <tr>
+    <td>Journal</td>
+    <td><ul>
+        <li>RDBMS: all counter value updates</li>
+    </ul></td>
+    <td><ul>
+        <li>RDBMS: all entry and update (including state changes like 'approved') activities on timesheet data</li>
+    </ul></td>
+    <td><ul>
+        <li>RDBMS: all processes and process steps started &amp; stopped (including start data and who did the start)</li>
+    </ul></td>
+    <td><ul>
+        <li>RDBMS: start/stop of all import/export/run-analysis/generate-report/annotate activities</li>
+    </ul></td>
+    <td><ul>
+        <li>JSON file: all processes started &amp; stopped</li>
+    </ul></td>
+  </tr>
+  <tr>
+    <td>Cache</td>
+    <td><ul>
+      <li>JSON: Visualizations of counter evolution and stats at start of current day (calculated at start of day or on first demand)</li>
+    </ul></td>
+    <td><ul>
+      <li>Report files: batch reports that can be served as-is since the data they were based on has not changed</li>
+      <li>Per-user most-frequent, most-recent and referred-from activities cache to help with auto-completion of timesheet entry</li>
+    </ul></td>
+    <td><ul>
+      <li>Process state &amp; stats visualization (with process-state-evolution-counter to check for stale-ness)</li>
+    </ul></td>
+    <td><ul>
+      <li>Report files: batch reports that can be served as-is since the data they were based on has not changed</li>
+    </ul></td>
+    <td><ul>
+      <li>None</li>
+    </ul></td>
+  </tr>
+  <tr>
+    <td width="12%">Back-end Concurrency</td>
+    <td width="22%"><p>Threads:</p>
+      <ul>
+        <li>Per session</li>
+        <li>For long-running background tasks like visualization</li>
+    </ul></td>
+    <td width="17%"><p>Threads:</p>
+      <ul>
+        <li>Per session</li>
+        <li>For long-running background tasks like report generation and cache generation and cleanup</li>
+    </ul></td>
+    <td width="15%"><p>Processes:</p>
+      <ul>
+        <li>For running the actual workflow steps (out of necessity due to the plethora of tools in diff. technologies but also to ensure extra robustness)</li>
+        <li>For running migratonomy slave processes that allow a master to distribute work to separate nodes and collect the results</li>
+      </ul>
+      <p>Threads:</p>
+      <ul>
+        <li>Per session</li>
+        <li>For long-running background tasks like state &amp; stats visualization, (email) notification and process monitoring</li>
+    </ul></td>
+    <td width="16%"><p>Processes:</p>
+      <ul>
+        <li>For long-running source code parsing tasks (out of necessity due to the plethora of tools in diff. technologies but also to ensure extra robustness)</li>
+      </ul>
+      <p>Threads:</p>
+    <ul>
+      <li>Per session</li>
+      <li>For long-running background import, export, analysis and report generation tasks</li>
+    </ul></td>
+    <td width="18%"><p>Threads:</p>
+      <ul>
+        <li>Per session</li>
+        <li>For process monitoring, management &amp; cleanup</li>
+    </ul></td>
+  </tr>
+  <tr>
+    <td width="12%">Web app</td>
+    <td width="22%"><p>App info page:<br />
+    [/about]</p>
+      <ul>
+        <li>Version</li>
+        <li>Capabilities</li>
+      </ul>
+      <p>Counter config page:<br />
+      [/counters/&lt;cntr-name&gt;/config]</p>
+      <ul>
+        <li>Name</li>
+        <li>Description</li>
+        <li>Unit</li>
+        <li>Min/max value</li>
+        <li>Reset daily/weekly/monthly</li>
+        <li>Typical increments</li>
+      </ul>      
+    <p>Counter usage page:<br />
+    [/counters/&lt;cntr-name&gt;/&lt;date&gt;]</p>
+    <ul>
+      <li>Navigate to counter</li>
+      <li>Navigate to date</li>
+      <li>Increment or set value</li>
+      </ul>
+    <p>Counter stats page:<br />
+    [/counters/&lt;cntr-name&gt;/stats?start-date=&lt;date&gt;&amp;end-date=&lt;date&gt;]</p>
+    <ul>
+      <li>Navigate to counter</li>
+      <li>Select period</li>
+      <li>Stats for period + counter + visualization</li>
+    </ul></td>
+    <td width="17%"><p>App info page:<br />
+    [/about]</p>    
+      <ul>
+        <li>Version</li>
+        <li>Capabilities</li>
+      </ul>
+      <p>Home page:<br />
+      [/]</p>
+      <ul>
+        <li>Links to entry</li>
+        <li>Links to individual reports [/reports/&lt;report-id&gt;]</li>
+        <li>Links to query<br />
+        [/query]</li>
+      </ul>
+      <p>Timesheet entry page:<br />
+      [/entry]</p>
+      <ul>
+        <li>Navigate to date</li>
+        <li>Select entries + delete</li>
+        <li>Select single entry for update</li>
+        <li>Add new entry</li>
+        <li>Push 'Complete' buttons</li>
+      </ul>
+      <p>Query page:<br />
+      [/query]</p>
+      <ul>
+        <li>Set per-query filters</li>
+        <li>'Submit' button</li>
+    </ul></td>
+    <td width="15%"><p>App info page:<br />
+    [/about]</p>    
+      <ul>
+        <li>Version</li>
+        <li>Capabilities</li>
+      </ul>
+      <p>Home page:<br />
+      [/]</p>
+      <ul>
+        <li>List active processes</li>
+        <li>Select a specific active process</li>
+        <li>Possibility to kill process</li>
+        <li>Possibility to start a new process</li>
+        <li>Link to action log</li>
+      </ul>
+      <p>Active process page:<br />
+      [/&lt;process-type&gt;/&lt;process-id&gt;]</p>
+      <ul>
+        <li>Visualize current process status with possibility to right-click on steps and ask for status or start or kill or update with startup data</li>
+      </ul>
+      <p>New process page:<br />
+      [/&lt;process-type&gt;/start-new]</p>
+    <ul>
+      <li>Select type</li>
+      <li>Configure params</li>
+      </ul>
+    <p>Step status page:<br />
+    [/&lt;process-type&gt;/&lt;process-id&gt;/&lt;step-name-or-id&gt;</p>
+    <ul>
+      <li>Show current step status of a specific process-id</li>
+    </ul></td>
+    <td width="16%"><p>App info page:<br />
+    [/about]</p>    
+      <ul>
+        <li>Version</li>
+        <li>Capabilities</li>
+      </ul>
+      <p>Home page:<br />
+      [/]</p>
+      <ul>
+        <li>Links to reports<br />
+        [/reports/&lt;report-id&gt;]</li>
+        <li>Links to queries<br />
+        [/queries/&lt;query-id&gt;]</li>
+      </ul>
+      <p>Active tasks page:<br />
+      [/tasks]</p>
+      <ul>
+        <li>List all tasks</li>
+        <li>[for admin only] Provide 'kill' button</li>
+      </ul>
+      <p>Reports page:<br />
+      [/reports]</p>
+    <ul>
+      <li>List all available reports</li>
+      </ul>
+    <p>Queries page:<br />
+    [/queries]</p>
+    <ul>
+      <li>List per-user queries</li>
+      </ul>
+    <p>Query page:<br />
+    [/queries/&lt;query-id&gt;]</p>
+    <ul>
+      <li>Set per-query filters</li>
+      <li>'Submit' button</li>
+    </ul></td>
+    <td width="18%"><p>App info page:<br />
+    [/about]</p>
+      <ul>
+        <li>Version</li>
+        <li>Capabilities</li>
+      </ul>
+      <p>Active tasks page:<br />
+      [/tasks]</p>
+      <ul>
+        <li>List all tasks + provide kill button</li>
+        <li>Start new task button</li>
+      </ul>      
+      <p>Start new task page:<br />
+      [/tasks/start-new]</p>
+      <ul>
+        <li>Select task type</li>
+        <li>Name</li>
+        <li>Initial data</li>
+        <li>Start button</li>
+      </ul>
+      <p>&nbsp;</p>
+    <p>&nbsp;</p></td>
+  </tr>
+  <tr>
+    <td width="12%">Web API</td>
+    <td width="22%"><p>Base URL: api/&lt;version&gt;/users/&lt;user&gt;/</p>
+      <p>POST counters &lt;counter-info&gt;</p>
+      <p>DELETE counters/&lt;cntr-name&gt; &lt;reason&gt;</p>
+      <p>PUT|POST counters/&lt;cntr-name&gt;/&lt;date&gt; &lt;counter-value&gt;</p>
+      <p>GET counters/&lt;cntr-name&gt;/&lt;date&gt;</p>
+    <p>GET counters/&lt;cntr-name&gt;/stats?start-date=&lt;date&gt;&amp;end-date=&lt;date&gt;</p></td>
+    <td width="17%"><p>Base URL: api/&lt;version&gt;/users/&lt;user&gt;/</p>    
+      <p>POST &lt;date&gt; &lt;timesheet-info&gt;</p>
+      <p>DELETE &lt;date&gt;/&lt;seqnr&gt;</p>
+      <p>PUT &lt;date&gt;/&lt;seqnr&gt; &lt;timesheet-info&gt;</p>
+      <p>GET &lt;date&gt;</p>
+    <p>GET reports/&lt;report-name&gt;?start-date=&lt;date&gt;&amp;end-date=&lt;date&gt;&amp;user-name=&lt;user&gt;&amp;tag=&lt;tag&gt;</p></td>
+    <td width="15%"><p>Base URL:</p>
+    <p>api/&lt;version&gt;/</p>
+    <p>GET slaves</p>
+    <p>GET process-types</p>
+    <p>GET process-types/&lt;process-type&gt;</p>
+    <p>POST &lt;process-type&gt; &lt;process-start-info&gt;</p>
+    <p>DELETE &lt;process-type&gt;/&lt;process-id&gt; &lt;stop-reason&gt;</p>
+    <p>GET &lt;process-type&gt;/&lt;process-id&gt;</p>
+    <p>POST &lt;process-type&gt;/&lt;process-id&gt;/&lt;step-name&gt; &lt;step-start-info&gt;</p>
+    <p>DELETE &lt;process-type&gt;/&lt;process-id&gt;/&lt;step-name&gt;/&lt;step-id&gt; &lt;reason&gt;</p>
+    <p>POST &lt;process-type&gt;/&lt;process-id&gt;/&lt;step-name&gt;/&lt;step-id&gt; &lt;status&gt;</p>
+    <p>GET &lt;process-type&gt;/&lt;process-id&gt;/&lt;step-name&gt;/&lt;step-id&gt;</p>
+    <p>GET &lt;process-type&gt;/&lt;process-id&gt;/stats</p>
+    <p>GET &lt;process-type&gt;/&lt;process-id&gt;/&lt;step-name&gt;/stats</p></td>
+    <td width="16%"><p>Base URL: api/&lt;version&gt;/projects/&lt;project&gt;/</p>    
+      <p>GET reports/&lt;report-name&gt;?&lt;report-filter-data&gt;</p>
+      <p>GET tasks/&lt;task-id&gt; <br />
+      -&gt; JSON status</p>
+    <p>DELETE tasks/&lt;task-id&gt; &lt;reason&gt;</p></td>
+    <td width="18%"><p>Base URL: api/&lt;version&gt;</p>
+      <p>POST tasks &lt;new-task-info&gt;</p>
+      <p>DELETE tasks/&lt;task-id&gt; &lt;reason&gt;</p>
+      <p>GET tasks</p>    </td>
+  </tr>
+  <tr>
+    <td>Common CLI</td>
+    <td colspan="5"><p>Separate actions:</p>
+      <ul>
+        <li>--start &lt;address&gt; --stop-reason &lt;reason&gt;</li>
+        <li>--shutdown &lt;address&gt; --reason &lt;reason&gt; (--immediate)?</li>
+        <li>--version</li>
+        <li>--upgrade</li>
+        <li>--list-configuration</li>
+        <li>--usage</li>
+        <li>--help</li>
+      </ul>
+      <p>Common options part of other actions:</p>
+      <ul>
+        <li>--user &lt;user&gt; --password &lt;pwd&gt;</li>
+    </ul></td>
+  </tr>
+  <tr>
+    <td width="12%">Specific CLI</td>
+    <td width="22%"><ul>
+      <li>(--set|--add) &lt;cntr-name&gt; &lt;cntr-value&gt; (--date &lt;date&gt;)?</li>
+      <li>--get &lt;cntr-name&gt; (--date &lt;date&gt;)?</li>
+      <li>--stats &lt;cntr-name&gt; (--start-date &lt;date&gt;)? (--end-date &lt;date&gt;)?</li>
+    </ul></td>
+    <td width="17%"><ul>
+      <li>--list (--date &lt;date&gt;?)</li>
+      <li>--add (--date &lt;date&gt;?) --data &lt;timesheet-data&gt;</li>
+      <li>--import &lt;data-file&gt;</li>
+      <li>--report &lt;report-name&gt; (--start-date &lt;date&gt;)? (--end-date &lt;date&gt;)? (--user &lt;username&gt;)* (--tag &lt;tag&gt;)* --output-format (csv|html|json)</li>
+    </ul></td>
+    <td width="15%"><ul>
+      <li>--list-slaves</li>
+      <li>--list-available-process-types</li>
+      <li>--start-process &lt;process-type&gt;</li>
+      <li>--start-step &lt;process-id&gt; &lt;json-step-name-and-data&gt;</li>
+      <li>--update-step &lt;step-id&gt; --status &lt;newstatus&gt;</li>
+      <li>--stop-step &lt;step-id&gt; --reason &lt;stop-reason&gt;</li>
+      <li>--stop-process &lt;process-id&gt; --reason &lt;stop-reason&gt;</li>
+      <li>--list-active-processes</li>
+      <li>--list-active-steps (--process &lt;id&gt;)*</li>
+      <li>--report-process-status &lt;process-id&gt; --output-format (csv|html|json)</li>
+      <li>--report-step-status &lt;step-id&gt; --output-format (csv|html|json)</li>
+      <li>--report-step-stats &lt;process-id&gt; &lt;step-name&gt;</li>
+      <li>--what-if-step-finishes &lt;step-id&gt;</li>
+    </ul></td>
+    <td width="16%"><ul>
+      <li>--import &lt;data-file&gt; --dataset &lt;dataset&gt; (--file-type &lt;type&gt;)*</li>
+      <li>--export &lt;data-file&gt; (--dataset &lt;dataset&gt;)* (--file-type &lt;type&gt;)* (--entry-type &lt;type&gt;)*</li>
+      <li>--analyze &lt;analysis-name&gt;</li>
+      <li>--report &lt;report-name&gt; (--dataset &lt;dataset&gt;)* --output-format (csv|html|json)</li>
+    </ul></td>
+    <td width="18%"><ul>
+      <li>--list-active-tasks</li>
+      <li>--stop-tasks &lt;task-id&gt; --stop-reason &lt;reason&gt;</li>
+      <li>--start-task &lt;json-task-request&gt;</li>
+    </ul></td>
+  </tr>
+</table>
+<h2><a name="unfinished_thoughts" id="unfinished_thoughts"></a>Unfinished Thoughts</h2>
+<p class="todo">How to 'roll up' journal entries? (Command-query separation)</p>
+<h3>Single-Page Apps (SPA) &lt;&gt; Websites</h3>
+<p class="todo">###TODO###</p>
+<p></p>
+</body>
+</html>

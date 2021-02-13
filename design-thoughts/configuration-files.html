@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="../media/style.css" rel="stylesheet" type="text/css" media="all" />
+<title>Configuration Files</title>
+</head>
+<body>
+<h1>Configuration Files</h1>
+<p>Configuration files seem to be an integral part of each software deployment. But are they truly essential and if so: what's the most generic way of implementing them.</p>
+<h2>TOC</h2>
+<ul>
+  <li><a href="#categorizations">Possible Categorizations</a></li>
+  <li><a href="#data_types">Data Types</a></li>
+</ul>
+<h2><a name="categorizations" id="categorizations"></a>Possible Categorizations</h2>
+<p>Apps. can get configured in different ways:</p>
+<h3>Categorization based on time: </h3>
+<ul>
+  <li>At  startup: typical for most apps</li>
+  <li>During  runtime: typical only for interactive apps that config. gets changed at  runtime; some apps (notably servers) also refresh their config. periodically or  on request by rereading it from some non-interactive source</li>
+</ul>
+<h3>Categorization based on source of settings:</h3>
+<ul>
+  <li>Interactive  user interface (options menu, settings page, …)</li>
+  <li>Command  line user interface: command line</li>
+  <li>File-based  configuration (properties files, xml files, ini files, …)</li>
+  <li>Database-based  configuration</li>
+  <li>Registry-based</li>
+  <li>Environment  variables</li>
+  <li>A  combination of the above where it is typical to have a ‘hierarchy’ of sources  where some settings can be overwritten/overruled by ‘higher-level’ sources,  while other settings are really the logical accumulation of the settings with  the same name from all sources</li>
+</ul>
+<h3>Categorization based on priority:</h3>
+<ul>
+  <li>Typically  the settings that got applied at the latest moment in time are most important  (typically interactive made settings overwrite those read from  files/environment/… at startup)</li>
+  <li>Typically  command line settings overrule any settings from other, non-interactive sources</li>
+  <li>If  multiple config. files are allowed, they typically must be specified in an  order where the last one overrides previous ones. Sometimes config. files are  implicitly ordered based on their scope (indicated by a specific file-system  location or naming pattern): local user-specific files overrule roaming  user-specific files, which themselves overrule general roaming files, which  themselves overrule machine-specific files</li>
+  <li>Registry  and env. vars seem to typically belong to the lowest-level, being overruled by  almost all other types of config. sources</li>
+  <li>Database-based  config is not very typical but if applied, it typically sits at the same level  as config. files, having priority over registry and env. vars but less priority  than interactive or command-line settings</li>
+  <li>SO  TYPICAL PRIORITY CHAIN (from most important to least): UI -&gt; CLI -&gt; DB  -&gt; FILES (in order) -&gt; REGISTRY -&gt; ENV. VARS</li>
+</ul>
+<h3>Categorization based on persistence:</h3>
+<ul>
+  <li>Some  settings that are used at runtime only apply at runtime and are not typically  persisted after an application run has finished: e.g. specific GUI element  coordinates, specific log file name, …</li>
+</ul>
+<h2 xmlns="http://www.w3.org/1999/xhtml" id="sites-page-title-header" align="left"><span id="sites-page-title" dir="ltr" tabindex="-1"><a name="data_types" id="data_types"></a>Configuration Data Types</span></h2>
+<p>Web forms, configuration/settings/ini files, configuration/settings dialogs/pages, command line options, ... are all examples of data input. Most of these ways to perform data input seem to use a finite set of underlying 'data types'. This 'core set of data types' is larger than the set of primitive types typically provided in programming languages or databases however.</p>
+<p>This will be an attempt to list all the fundamental types that seem to be used:</p>
+<ul>
+  <li><strong>Number</strong>: a decimal, bounded-range number</li>
+  <li><strong>Text</strong>: free-form text without any more specific meaning</li>
+  <li><strong>Date</strong>: a specific day in history</li>
+  <li><strong>Weekday</strong>: one of the seven weekdays</li>
+  <li><strong>Month</strong>: one of the twelve months</li>
+  <li><strong>Time</strong>: a point in time in a 24h clock</li>
+  <li><strong>Timespan</strong>: an amount of elapsed time</li>
+  <li><strong>Frequency</strong>: a number indicating the amount of repetition of a recurring event</li>
+  <li><strong>URL/URI</strong>: a valid URL or URI</li>
+  <li><strong>File/Directory Path</strong>: a valid file (or directory) path</li>
+  <li><strong>Mail Address</strong>: a valid email address</li>
+  <li><strong>Phone Number</strong>: a valid phone number </li>
+  <li><strong>Address</strong>: a valid address, which typically consists of multiple more fundamental data parts</li>
+  <li><strong>Country</strong>: one of the existing countries</li>
+  <li>... </li>
+</ul>
+<p></p>
+</body>
+</html>

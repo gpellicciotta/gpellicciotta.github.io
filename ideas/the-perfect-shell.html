@@ -1,0 +1,56 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="../media/style.css" rel="stylesheet" type="text/css" media="all" />
+<title>The Perfect Shell</title>
+</head>
+<body>
+<h1>The Perfect Shell</h1>
+Why cmd.exe, sh and bash are not perfect shells:
+<div>
+<ul><li>Limited and syntactically awkward programming (scripting) possibilities&nbsp;</li></ul>
+<div>Why perl, python, ... are not perfect shells:</div>
+<div>
+<ul><li>Too verbose to run external programs</li>
+<li>Too verbose to setup pipes</li>
+<li>Too verbose to switch directories</li></ul>
+<div>What would the perfect shell look like for me:</div>
+</div>
+<div>
+<ul><li>Full programming language syntax (preferably Python or Groovy or Beanshell)</li>
+<li>Very succinct syntax for program invocation and pipelining</li>
+<li>Very succinct syntax for changing the current working directory</li>
+<li>Built-in and succinctly invocable functionality for many commonly used Unix utilities: ls, find, grep, sed, date, dirname, basename, top, ps, pwd, df, du</li>
+<li>Built-in functionality for switching directories with full directory history</li>
+<li>Built-in functionality for selecting files based on re's or glob's</li>
+<li>Built-in and context-sensitive tab-completion for: file-names, program-names, function-arguments and of course: command-history</li>
+<li>Built-in functionality for starting tasks in the background</li></ul>
+<div>What could also be cool:</div>
+</div>
+<div>
+<ul><li>Syntax-coloring</li>
+<li>Web-based shell</li>
+<li>Collapsable output and error output from programs</li>
+<li>Input forms for gathering input</li>
+<li>Good support for cut, copy &amp; paste (also for column mode)</li></ul>
+</div>
+<div><br />
+</div>
+</div>
+<h3>Possible Syntax</h3>
+<div><br />
+</div>
+<div>Command history: <code>cmd&lt;cmd-nr&gt;</code></div>
+<div>Output history: <code>out&lt;cmd-nr&gt;</code></div>
+<div>File selection: based on globs: <code>f&lt;*.txt&gt;</code> &nbsp;based on regexes: <code>fr&lt;^f.*\.txt&gt;</code></div>
+Command invocation:&nbsp;
+<div>&nbsp;&nbsp;Simple commands: <code>&lt;date +%Y-%m-%d&gt;</code></div>
+<div>&nbsp;&nbsp;Piping (| pipes stdout, || pipes stderr, ||| pipes stdout and stderr): <code>&lt;ls -lh&gt; | &lt;sed -e "s/my/you/g"&gt; ||| &lt;uniq -c&gt;&nbsp;</code></div>
+<div>&nbsp;&nbsp;Redirection (&lt; input from right, &gt; output to right): <code>&lt;cat f&lt;file-1.txt&gt;&gt; | &lt;sed -e "s/my/yu/g"&gt; &gt; f&lt;file-2.txt&gt;</code><br />
+<div><br />
+</div>
+</div>
+
+</body>
+</html>

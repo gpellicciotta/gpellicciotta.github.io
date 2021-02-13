@@ -1,0 +1,869 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="../media/style.css" rel="stylesheet" type="text/css" media="all" />
+<title>A Minimalistic Workflow Engine</title>
+</head>
+<body>
+<h1>A Minimalistic Workflow Engine</h1>
+<h2>Contents</h2>
+<ul>
+  <li><a href="#vision">Vision</a></li>
+  <li><a href="#context">Context</a>
+      <ul>
+        <li><a href="#use_cases">Use Cases</a></li>
+        <li><a href="#context">Compared to a Workflow Engine</a></li>
+        <li><a href="#compare_to_job_scheduler">Compared to a Job Scheduler</a></li>
+        <li><a href="#compare_to_build_automation">Compared to Build Automation Software</a></li>
+        <li><a href="#compared_to_other_stuff">Compared to other stuff</a></li>
+      </ul>
+  </li>
+  <li><a href="#requirements">Requirements</a>
+      <ul>
+        <li><a href="#functional_requirements">Functional</a></li>
+        <li><a href="#nonfunctional_requirements">Non-Functional</a></li>
+      </ul>
+  </li>
+  <li><a href="#terminology">Design Terminology</a>
+      <ul>
+        <li><a href="#definition_of_process">Process</a></li>
+        <li><a href="#definition_of_task">Task</a></li>
+        <li><a href="#definition_of_start_condition">Start Condition</a></li>
+        <li><a href="#definition_of_host_system">Host System</a></li>
+        <li><a href="#definition_of_engine">Engine</a></li>
+      </ul>
+  </li>
+  <li><a href="#choices">Design Choices</a></li>
+</ul>
+<h2><a name="vision" id="vision"></a>Vision</h2>
+<p>Provide a web-based <strong>visualization</strong> and <strong>management</strong> interface for a <strong>process</strong> consisting of interdependent <strong>tasks</strong> that makes it super-easy to understand the current process status and affect this status by starting/stopping tasks interactively.</p>
+<p>The web-based visualization dashboard shows a graphical representation of all tasks that make up the process: each task is a box and task dependencies are show as arrow-edges between the task boxes. Color codes represent the various status a task can be in: not ready for execution, ready for execution, in progress, finished, failed. </p>
+<p>Software tasks are executed and tracked 100% automatically and can be configured to run on different host systems.</p>
+<p>Interactive tasks (those needing human intervention) lead to a notification (SMS or mail) being sent to the person assigned to the task, once the task becomes 'ready for execution'. The notification will contain a link to an interactive 'task status form', in which the assignee can change the task's status to 'in progress', 'finished' or 'failed'.</p>
+<p>Right-clicking a task box also provides the possibility to show more information about the task's current status (where it is executing or whom it is assigned too, how long it is expected to run, ...) and historical execution information (how many times it has run before, % success &lt;&gt; failure, avg. execution time, ...). For software tasks it is also possible to abort (i.e. kill) a currently running task.</p>
+<p>New processes and tasks can also be defined easily via a web interface (or web API), with automated process visualization generation, yet allowing for easy drag-and-drop re-arrangement of the visualization too.</p>
+<h2><a name="context" id="context"></a>Context</h2>
+<h3><a name="use_cases" id="use_cases2"></a>Use Cases</h3>
+<h4>Use Case #1 </h4>
+<p>A background process (i.e. a job in OS terminology) needs to get started automatically as soon as two or more other background jobs have finished succesfully. </p>
+<p>E.g. whenever five separate regression testsuites have run to completion and each has succeeded, start another two regression testsuites that makes use of the results of the others, and when these also succeed, create a distributable package and send an email to the dev. team.</p>
+<p> So why not just create a script? Because MyProcessFlow:</p>
+<ul>
+  <li> provides a nice visualization of the current status, which is important for long running processes</li>
+  <li>provides a possibility to re-start (possibly after human inspection and intervention) a failed background job from it's web-interface or web API, still ensuring that other tasks that depended on this failed task will get scheduled again, as soon as possible</li>
+</ul>
+<h4>Use Case #2</h4>
+<p>Many background processes need to get started as soon as possible but some depend on processes that are currently not automated and need to be performed by humans. Once these human tasks are done, further automated processes should again start as soon as possible.</p>
+<p>E.g. A new software release can be built automatically, regression tests run automatically and a distro package created automatically but then somebody needs to perform manual UI testing before it is approved to automatically be uploaded to the distribution server.</p>
+<h4>Use Case #3</h4>
+<p>A process consists of hundreths or thousands of background processes whose dependencies form a complex DAG.</p>
+<p>E.g. An ETL (Extract, Transform, Load) pipeline consists of hundreths of tables from a DB2 system on z/OS that need to be unloaded, FTPed, transformed on a per-table basis and then loaded into 10 different SQL Server systems. This whole pipeline consists of &gt; 1000 independent processes that need to run, on at least two different systems, and if one process fails, all upcoming ones need to wait.</p>
+<p>So why not use a Makefile or similar? Because MyProcessFlow:</p>
+<ul>
+  <li>provides easier means to define the process as a whole </li>
+  <li>provides a nice visualization of the current status, which is important for long running processes</li>
+  <li>provides a possibility to re-start (possibly after human inspection and intervention) a failed background job from it's web-interface or web API, still ensuring that other tasks that depended on this failed task will get scheduled again, as soon as possible</li>
+</ul>
+<h3><a name="compare_to_workflow_engine" id="compare_to_workflow_engine"></a>Compared to a Workflow Engine</h3>
+<p>The term 'Workflow Engine' is typically used in the context of business processes, whereby tasks are assigned to persons and the overall status of a process is tracked in terms of who's assigned to which tasks and which tasks have already been completed:</p>
+<blockquote>
+  <p>&quot;Workflow management systems allow the user to define different workflows for different types of jobs or processes.&nbsp;For example, in a manufacturing setting, a design document might be automatically routed from designer to a technical director to the production engineer. At each stage in the workflow, one individual or group is responsible for a specific task. Once the task is complete, the workflow system ensures that the individuals responsible for the next task are notified and receive the data they need to execute their stage of the process.&quot;</p>
+</blockquote>
+<p>Some references:</p>
+<ul>
+  <li><a href="http://en.wikipedia.org/wiki/Workflow">Wikipedia's definition of Workflow</a></li>
+  <li><a href="http://en.wikipedia.org/wiki/Workflow_engine">Wikipedia's definition of Workflow Engine</a></li>
+  <li><a href="http://en.wikipedia.org/wiki/Workflow_management_system">Wikipedia's definition of Workflow Management System</a></li>
+  <li><a href="http://en.wikipedia.org/wiki/Business_Process_Execution_Language">BPEL - Business Process Execution Language</a></li>
+  <li><a href="http://www.bpmn.org/">OMG's BPMN - Business Process Management Notation</a></li>
+  <li><a href="http://www.activiti.org/">Activity: an open-source workflow engine written in java</a> (a successor to <a href="http://www.jbpm.org/">jBPM</a>)</li>
+</ul>
+<p>MyProcessflow is different:</p>
+<ul>
+  <li>It is geared towards processes that consist mostly of software tasks: interactive tasks that need human intervention are also catered for but are not the focus, which is the opposite in traditional workflow management systems</li>
+  <li>It is a lot simpler: it doesn't use BPEL, BPMN or any other language with advanced 'combinators': tasks can only be dependent on the successful execution of other tasks</li>
+</ul>
+<h3><a name="compare_to_job_scheduler" id="compare_to_workflow_engine2"></a>Compared to a  Job Scheduler</h3>
+<p>The term 'Job Scheduler'  is used to talk about executing tasks that are software processes (hence typically without user involvement).</p>
+<blockquote>
+  <p>&quot;A&nbsp;<strong>job scheduler</strong>&nbsp;is a computer application for controlling unattended background program execution&quot;.<br />
+  </p>
+  <p> &quot;Today's job schedulers, often termed&nbsp;<strong>workload automation</strong>, typically provide a graphical user interface and a&nbsp;single point of control&nbsp;for definition and monitoring of background executions in a distributed network of computers&quot;</p>
+  <p>&quot;Basic features expected of job scheduler software include:</p>
+  <ul>
+    <li>interfaces which help to define workflows and/or job dependencies</li>
+    <li>automatic submission of executions</li>
+    <li>interfaces to monitor the executions</li>
+    <li>priorities and/or queues to control the execution order of unrelated jobs</li>
+  </ul>
+</blockquote>
+<p>References:</p>
+<ul>
+  <li><a href="http://en.wikipedia.org/wiki/Job_scheduler">Wikipedia's definition of a Job Scheduler</a></li>
+  <li><a href="http://en.wikipedia.org/wiki/Batch_processing">Wikipedia's definition of Batch Processing</a></li>
+  <li><a href="http://en.wikipedia.org/wiki/Background_process">Wikipedia's definition of Background Process</a></li>
+</ul>
+<p>MyProcessFlow is different, although sharing many characteristics:</p>
+<ul>
+  <li>It is  geared towards processes that consist mostly of software tasks but, in contrast to pure job schedulers, also supports interactive tasks that need human intervention.</li>
+  <li>Is a lot simpler: it doesn't support advanced start conditions based on calendars or external events: tasks can only be dependent on the successful execution of other tasks</li>
+</ul>
+<h3><a name="compare_to_build_automation" id="compare_to_build_automation"></a>Compared to Build Automation Software</h3>
+<p>The term 'Build Automation'  is used to talk about tools that ultimately execute a series of build steps, each of which can be seen as a mini-script. The automation part sits in the automatic resolving of dependencies between build steps, in order to execute these steps:</p>
+<ul>
+  <li>in the right order: optimalization</li>
+  <li>possibly with parallellization of steps: parallellization</li>
+  <li>possibly skipping certain steps because they would not lead to different outcomes: incremental build</li>
+</ul>
+<p>References:</p>
+<ul>
+  <li><a href="http://en.wikipedia.org/wiki/Build_automation">Wikipedia's definition of a Build Automation</a></li>
+  <li><a href="http://en.wikipedia.org/wiki/List_of_build_automation_software">Wikipedia's list of Build Automation Software</a></li>
+  <li><a href="https://jenkins-ci.org/">Jenkins Continuous Integration Server</a></li>
+</ul>
+<p>MyProcessFlow is different, although sharing some characteristics:</p>
+<ul>
+  <li>It is also geared towards executing tasks in the right, optimal order, possibly with concurrently executing tasks</li>
+  <li>It is not specifically geared towards build automation, although it could be used for that too</li>
+  <li>It does not offer a 'scripting language' itself: it just relies on executing background processes with a given environment and command line</li>
+  <li>It is a little similar to continuous integration servers like Jenkins, yet focusing more on visual representation and management and less on integration with specific software building components, nor providing version control changes as 'start conditions'</li>
+</ul>
+<h3><a name="compared_to_other_stuff" id="compared_to_other_stuff"></a>Compared to Other Stuff</h3>
+<p>References:</p>
+<ul>
+  <li><a href="http://en.wikipedia.org/wiki/Petri_net">Wikipedia's definition of Petri Nets</a></li>
+</ul>
+<h2><a name="requirements" id="requirements"></a>Requirements</h2>
+<p>[v1] refers to requirements for a first version, [v2] requirements for later versions.</p>
+<h3><a name="functional_requirements" id="functional_requirements"></a>Functional</h3>
+<ol>
+  <li>Super-easy web-interface with the main status visualization and task management all on a single page</li>
+  <li>100% automatic process visualization</li>
+  <li>100% automatic interactive task interaction form</li>
+  <li>Task start conditions are restricted to the successful finish of tasks they depend on</li>
+  <li>An execution engine that strives for max. task throughput</li>
+  <li>An execution engine that can manage software tasks on a single system</li>
+  <li>A pure CLI interface for interrogating process and task status, stopping and starting tasks and changing the status of interactive tasks</li>
+  <li>A pure REST web-API for interrogating process and task status, stopping and starting tasks and changing the status of interactive tasks</li>
+</ol>
+<div class="design-note">
+  <p>For a later version, following requirements could be added:</p>
+  <ol>
+    <li value="9">Super-easy web-based definition and configuration of processes and tasks</li>
+    <li>A process can be used as a task in another process and the visualization dashboard allows easy switching between different process views</li>
+    <li>A customized visualization can be provided instead of the automatically generated one</li>
+    <li>Interactive task interaction form can be fully customized</li>
+    <li>Keep track of historical task executions and present this information via the web-based interface</li>
+    <li>Task start conditions can be extended to depend on date/time, resource availibility and task-specific restrictions like max-executions-per-time-period, max-elapsed-time-per-time-period, ...</li>
+    <li>An execution engine that can manage sofware tasks on multiple systems</li>
+    <li>A pure REST web-API for defining &amp; configuring processes and tasks</li>
+  </ol>
+</div>
+<h3><a name="nonfunctional_requirements" id="nonfunctional_requirements"></a>Non-Functional</h3>
+<ol>
+  <li value="20">Fail-safe engine: background processes are not killed when the engine itself stops and when they succeed, the engine can pick up from their successful finish once restarted</li>
+  <li>Copy-and-paste install experience and 'software-on-a-stick' is possible</li>
+  <li>Configuration is super easy and restricted to 1 file per process and 1 file per engine</li>
+  <li>Runs equally well on Windows and *NIX</li>
+  <li>No or minimal dependencies on 3rd party software</li>
+</ol>
+<div class="design-note">
+  <p>For a later version, the following could be added:</p>
+  <ol>
+    <li value="25">Runs equally well on the Azure cloud and Google App Engine</li>
+    <li>Runs equally well on z/OS</li>
+  </ol>
+</div>
+<h2><a name="terminology" id="terminology"></a>Design Terminology</h2>
+<h3><a name="definition_of_process" id="definition_of_process"></a>Process</h3>
+<p> A process in a set of interdependent <a href="#definition_of_task">tasks</a> that each work together to enable some wanted outcome. </p>
+<p>A process can itself represent a single task in some higher-level process.</p>
+<p> Commonly used aliases: a job (when seen a sequence of steps), a job chain, a workflow, a schedule, a project.</p>
+<h3><a name="definition_of_task" id="definition_of_task"></a>Task</h3>
+<p>A  unit of activity, a single task in a larger <a href="#definition_of_process">process</a>, the execution of some indivisable unit of work. </p>
+<p>For MyProcessFlow, most tasks will be 'software tasks', which mean that they represent a running OS-level background process. Interactive tasks that represent some human activity that needs to be confirmed to be accomplished, are also possible however.<br />
+</p>
+<p>Commonly used aliases: a job (when seen as a background OS process), a step, an activity, a target.<br />
+</p>
+<p>Examples: compile all sources belonging to a software project, send certain files via FTP, load a dataset into a database, ...</p>
+<h3><a name="definition_of_start_condition" id="definition_of_start_condition"></a>Start Condition</h3>
+<p>The start condition of a task determines whether (and when) a task is ready for execution.<br />
+</p>
+<p>Commonly used aliases: start events, start triggers.</p>
+<p>A very typical (and currently the only one supported by MyProcessFlow) start condition is a task's dependency on the successful execution of other tasks it depends on. Other start conditions can be a specific date or time-range or the availability of certain resources.</p>
+<h3><a name="definition_of_host" id="definition_of_host"></a>Host System</h3>
+<p>The system on which the engine runs and on which it starts and track software tasks, that is: background OS processes.</p>
+<h3><a name="definition_of_engine" id="definition_of_engine"></a>ProcessFlow Engine</h3>
+<p>The main engine that, in a loop, checks the status of all tasks that belong to a process, and starts/tracks tasks that are ready for execution.</p>
+<div class="design-note">
+  <p>Note that this terminology is not completely consistent with how traditional job schedulers use these words. SOS JobScheduler for instances uses following terminology:</p>
+  <ul>
+    <li>Job Chain: &quot;Sequences of jobs can easily be configured in job chains that guarantee that a successor job is not invoked if a previous job provokes an error. .... Job chains are nodes of jobs that are organized in a sequence, every node is given a distinct state. An order proceeds along the jobs in a job chain one after the other. Should a processing error occur, then the order is stopped and removed from the job chain.&quot;<br />
+    </li>
+    <li>Order: &quot;An order is the instruction set describing how a job chain should execute a series of jobs. An order can be carried out immediately or when a preconfigured event takes place. Example events are times of the day, days of the week or files being added to a directory.
+      A job chain can be seen as an assembly line on which orders are run. The orders are processed by the individual machines of the assembly line one after the other. A job comprises exactly one step in the processing of an order. After a job has been completed, the state of the order is changed, which in turn affects the next step in the job chain.&nbsp;&quot; </li>
+    <li>Job: &quot;A job determines the program to be executed, its run time and what is to be done in the event of an error occurring. Further, any parameters to be used, pre and post processing, locks preventing simultaneous access to a file and possible follow-on jobs may also belong to a job configuration.&quot;</li>
+    <li>Task: A specific execution of a job (within a jobchain or not)</li>
+  </ul>
+</div>
+<h2><a name="choices" id="goals2"></a>Design Choices</h2>
+<h3>Implementation technologies</h3>
+<ul>
+  <li>Java 1.7 or Python 2.x because it is highly portable</li>
+  <li>HTML + CSS + Javascript for web front-end</li>
+  <li>Jetty or Python built-in webserver</li>
+  <li>SVG for process visualization since it is portable and other tools exist that can work with it</li>
+  <li>XML or JSON for config files</li>
+  <li>GraphViz for automatic SVG process visualization generation?<span class="design-note">Preferably replace by java-based alternative</span></li>
+</ul>
+<h3>How is state kept?</h3>
+<h4>Option 1: in state JSON Files</h4>
+<p>State will be held in a process/project-specific state file-system directory (as opposed to a DB) because this:</p>
+<ul>
+  <li>Makes it easy to check and manipulate the state with external tools (e.g. touch, cp, ...)</li>
+  <li>Helps make the setup experience simple (just a <kbd>mkdir -p {state-dir}</kbd>, and also <kbd>mkdir -p {history-dir}</kbd>)</li>
+</ul>
+<p>Drawbacks are no automatic concurrency control and the potential of external processes destroying or messing up the state.</p>
+<p>Following state files will be used, always relative to a process-type and process instance ID specific directory (defaulting to: <kbd>{process type name}/{process instance id}</kbd>):</p>
+<table width="100%" border="1" cellspacing="0" cellpadding="2">
+  <tr>
+    <th width="28%">State File Name Pattern</th>
+    <th width="38%">Contents</th>
+    <th width="34%">Meaning and Transitions</th>
+  </tr>
+  <tr>
+    <td><p>{task type name}/{task instance id}.started</p>
+    <p>&nbsp;</p>
+    <p>E.g. idms-migration/snapshot-1/compile-programs/33.started could indicate the 33the time the 'compile-programs' task is being executed as part of the 'snapshot-1' instance of the 'idms-migration' project type.</p>
+    <p class="design-note">If these file name patterns can be configured, a choice could also be made to only ever keep track of the last instance of every executed task, like: {task type name}.started leading to idms-migration/snapshot-1/compile-programs.started</p></td>
+    <td> For all task types, per task instance started as part of a process:
+      <pre>
+{
+  &quot;process-instance-id&quot;: process-id,
+  &quot;process-type-name&quot;: process template name,<br />  &quot;task-instance-id&quot;: task-id,<br />  &quot;task-type-name&quot;: task name within the process type,
+  &quot;task-type-type&quot;: &quot;automated&quot; | &quot;interactive&quot;,
+  &quot;start-time&quot;: &quot;yyyymmddThhmmsshh&quot;,
+  &quot;start-reason&quot;: &quot;ready&quot; | user-id,
+  </pre>
+      For automated tasks only:
+      <pre>
+  &quot;host-system&quot;: system-id,
+  &quot;command-line&quot;: [ cli-arg, cli-arg, ... ],
+  &quot;environment&quot;: { 
+    env-name: env-value, 
+    ... 
+  }
+</pre>
+      For interactive tasks only:
+      <pre>
+  &quot;input-data&quot;: { 
+    name: value, 
+    ... 
+  }
+</pre>
+      For all tasks:
+      <pre>
+}
+</pre></td>
+    <td><p>Created automatically once a user or the system starts a task. The presence of this file records the fact that that the task is in the 'in progress' status.</p>
+        <div class="design-note">
+          <p>Note that on Linux, the actual file creation time is not always available, so we could opt to encode that as part of the file name, but that makes 'manual intervention' more difficult and it would also lead to potentially more 'garbage' in the state directory while now there are guaranteed max. 3 files per task id: xxx.started, xxx.running and xxx.finished or xxx.failed.</p>
+          <p>Still on Linux, and assuming the xxx.started file is only modified for creating, the last modified timestamp is good enough. Also on Windows this will work.</p>
+          <p>Same reasoning will go for the xxx.failed or xxx.finished files as also there the last mod time will be a good enough approx. for the task's end time.</p>
+        </div>
+      <p>But... how can we then be sure that we have a history file for our finished or failed task?</p></td>
+  </tr>
+  <tr>
+    <td>{task type name}/{task instance id}.{pid}.running</td>
+    <td><p>Redirected stdout/stderr stream of software process</p>
+        <p class="design-note">Why not re-use the xxx.started file? Because the file-timestamp would get updated? But also the output will be pure text and we want to encode that into JSON.</p></td>
+    <td>Only for automated tasks that map to executing OS background processes.</td>
+  </tr>
+  <tr>
+    <td>{task type name}/{task instance id}.finished</td>
+    <td rowspan="2"> For all task types:
+      <pre>
+{
+  &quot;process-id&quot;: process-id,
+  &quot;task-id&quot;: task-id,
+  &quot;task-type&quot;: &quot;automated&quot; | &quot;interactive&quot;,
+  &quot;start-time&quot;: &quot;yyyymmddThhmmsshh&quot;,
+  &quot;end-time&quot;: &quot;yyyymmddThhmmsshh&quot;,
+  &quot;elapsed-time&quot;: &quot;ddd:hh:mm:ss.hhh&quot;,
+  &quot;start-reason&quot;: &quot;ready&quot; | user-id,
+  </pre>
+      For automated tasks only:
+      <pre>
+  &quot;host-system&quot;: system-id,
+  &quot;command-line&quot;: [ cli-arg, cli-arg, ... ],
+  &quot;environment&quot;: { 
+    env-name: env-value, 
+    ... 
+  },
+  &quot;exit-code&quot;: exit-code,
+  &quot;output&quot;: [ 
+    output-line, 
+    output-line, 
+    ...
+  ]
+</pre>
+      For interactive tasks only:
+      <pre>
+  &quot;input-data&quot;: { 
+    name: value, 
+    ... 
+  }
+  &quot;output-data&quot;: { 
+    name: value, 
+    ... 
+  }
+</pre>
+      For all tasks:
+      <pre>
+}
+</pre></td>
+    <td rowspan="2"><p>Created automatically for software tasks when the task stops 'normally'. When a task is killed abnormally, this file will not be created automatically.</p>
+        <p>Then either the system can try to check itself whether this 'started' task is still alive (by checking the {pid} in combination with the {start timestamp} and if not: create a xxx.failed file.</p>
+      <p>An administrator can also create this file manually by either extending the xxx.started file and then copying to xxx.finished or xxx.failed or just creating the xxx.finished or xxx.failed file directly.</p>
+      <p>For interactive tasks, this file will be created automatically based on the form the assigned user fills in.</p></td>
+  </tr>
+  <tr>
+    <td>{task type name}/{task instance id}.failed</td>
+  </tr>
+</table>
+<h4>Option 2: in an RDBMS</h4>
+<p>State will be held in a RDBMS because this:</p>
+<ul>
+  <li>Makes it easy to check and manipulate the state with standard RDBMS tools</li>
+  <li>Makes it easy to aggregate statistics and keep all information readily available in a very structured way</li>
+  <li>Makes it easy to update from multiple concurrent locations/processes</li>
+</ul>
+<p>Following tables will get used:</p>
+<table width="100%" border="1" cellspacing="0" cellpadding="2">
+  <tr>
+    <th width="28%">Table Name</th>
+    <th width="38%">Contents</th>
+    <th width="34%">Meaning and Transitions</th>
+  </tr>
+  <tr>
+    <td>PROCESS_TYPES</td>
+    <td>
+<pre>PROCESS_TYPE_NAME        VARCHAR(30)     PRIMARY KEY
+PROCESS_TYPE_DESCRIPTION VARCHAR(140)
+</pre>    </td>
+    <td><p>Give an ID, name and description to a specific process type, where a process type is characterized by the set of tasks that are associated with it.</p>
+    <p class="design-note">Maybe the process type info can still be part of the 'static configuration', as part of a JSON config file, and it doesn't need to be inside the DB.</p></td>
+  </tr>
+  <tr>
+    <td>TASK_TYPES</td>
+    <td>
+<pre>TASK_TYPE_NAME           VARCHAR(30)    PRIMARY KEY
+TASK_TYPE_DESCRIPTION    VARCHAR(140)
+TASK_TYPE_TYPE           CHAR(1) 
+               CHECK IN 'A'utomated task
+                     OR 'I'nteractive task
+                     OR 'P'rocess representing group task</pre></td>
+    <td><p>Give an ID, name, description and startup type to a specific task type.</p>
+    <div class="design-note">Maybe the task type info can still be part of the 'static configuration', as part of a JSON config file, and it doesn't need to be inside the DB.</div></td>
+  </tr>
+  <tr>
+    <td>PROCESS_TASKS</td>
+    <td>
+<pre>
+PROCESS_TYPE_NAME        VARCHAR(30) FOREIGN KEY
+TASK_TYPE_NAME           VARCHAR(30) FOREIGN KEY
+</pre></td>
+    <td><p>Link task types to the process types they are part of.</p>
+    <p class="design-note">Same remark as above</p></td>
+  </tr>
+  <tr>
+    <td>INTER_TASK_DEPENDENCIES</td>
+    <td>
+<pre>
+TASK_TYPE_NAME            VARCHAR(30) FOREIGN KEY
+DEPENDENT_TASK_TYPE_NAME  VARCHAR(30) FOREIGN KEY                        
+</pre></td>
+    <td>Link task types to other task types they are dependent on. <p class="design-note">Same remark as above</p></td>
+  </tr>
+  <tr>
+    <td><p>PROCESSES<br />
+      and<br />
+    PROCESSES_HISTORY</p>      </td>
+     <td>
+<pre>
+PROCESS_TYPE_NAME        VARCHAR(30)<span class="design-note"> FOREIGN KEY</span>
+PROCESS_INSTANCE_ID      VARCHAR(30) PRIMARY KEY
+PROCESS_START_TIME       DATE_TIME
+PROCESS_END_TIME         DATE_TIME
+PROCESS_END_REASON       VARCHAR(140)                       
+</pre></td>
+    <td><p>Represents actually running processes (e.g. a process is to a process type like an object is to a class).</p>
+    <p>A process can end in one of two ways: either by manually being marked as 'ended' or when all task types belong to the process that don't have other task types depend on them, have finished succesfully.</p>    </td>
+  </tr>
+  <tr>
+    <td><p>TASKS<br />
+      and<br />
+      TASKS_HISTORY<br />
+    </p>      </td>
+    <td><pre>
+PROCESS_TYPE_NAME        VARCHAR(30)<span class="design-note"> FOREIGN KEY</span>
+PROCESS_INSTANCE_ID      VARCHAR(30) FOREIGN KEY
+TASK_TYPE_NAME           VARCHAR(30) <span class="design-note">FOREIGN KEY</span>
+TASK_INSTANCE_ID         INTEGER     PRIMARY KEY 
+TASK_START_TIME          DATETIME
+TASK_END_TIME            DATETIME<br />TASK_ELAPSED_TIME        TIMESPAN
+TASK_START_REASON        VARCHAR(30)
+TASK_STATUS              VARCHAR(30)                       
+  </pre></td>
+    <td>Represents actually running tasks (e.g. a task is to a task type like an object is to a class)</td>
+  </tr>
+  <tr>
+    <td>TASK_DETAILS<br />
+      and<br />
+      TASK_DETAILS_HISTORY</td>
+    <td><pre>PROCESS_INSTANCE_ID      VARCHAR(30) FOREIGN KEY<br />TASK_INSTANCE_ID         INTEGER     FOREIGN KEY
+TASK_DETAIL_TYPE         VARCHAR
+                CHECK IN 'ENVIRONMENT-VARIABLE'<br />                         'COMMAND-LINE'<br />                         'INPUT-VARIABLE'<br />                         'EXIT-CODE'<br />                         'OUTPUT-LINE'
+TASK_DETAIL_NAME         VARCHAR<br />TASK_DETAIL_VALUE        VARCHAR                       
+  </pre></td>
+    <td>Details about running tasks, both input data and output results.</td>
+  </tr>
+  <tr>
+    <td>ACTIVITY_LOG</td>
+    <td><pre>EVENT_ID                 INTEGER     PRIMARY KEY<br />
+EVENT_TYPE               VARCHAR
+                CHECK IN 'START-PROCESS'<br />                         'END-PROCESS'<br />                         'START-TASK'<br />                         'END-TASK'<br />                         'START-ENGINE'<br />                         'SHUTDOWN-ENGINE'
+EVENT_TIME               DATETIME<br />EVENT_MESSAGE            VARCHAR(140)                       
+  </pre></td>
+    <td>Details about running tasks, both input data and output results.</td>
+  </tr>
+</table>
+<h3>&nbsp;</h3>
+<h3>How is historical info kept?</h3>
+<p>When keeping state info inside the RDBMS, all historical info is readily available.</p>
+<p>When using JSON files on the file system however, it makes sense to make this history information more explicitly available for viewing in the HTML interface, for calculating 'percent complete' for running steps and for success/failure rate statistics.</p>
+<p>The amount of history to keep must be configurable.</p>
+<table width="100%" border="1" cellspacing="0" cellpadding="2">
+  <tr>
+    <th width="28%">History File Name Pattern</th>
+    <th width="43%">JSON Contents</th>
+    <th width="29%">Meaning and Transitions</th>
+  </tr>
+  <tr>
+    <td>{process type id}/{process instance id}/{task type id}.{task instance id}.{start-time}.{end-time}.finished</td>
+    <td rowspan="2"> For all task types:
+      <pre>
+{
+  &quot;process-id&quot;: process-id,
+  &quot;task-id&quot;: task-id,
+  &quot;task-type&quot;: &quot;automated&quot; | &quot;interactive&quot;,
+  &quot;start-time&quot;: &quot;yyyymmddThhmmsshh&quot;,
+  &quot;end-time&quot;: &quot;yyyymmddThhmmsshh&quot;,
+  &quot;elapsed-time&quot;: &quot;ddd:hh:mm:ss.hhh&quot;,
+  &quot;start-reason&quot;: &quot;ready&quot; | user-id,
+  </pre>
+      For automated tasks only:
+      <pre>
+  &quot;host-system&quot;: system-id,
+  &quot;command-line&quot;: [ cli-arg, cli-arg, ... ],
+  &quot;environment&quot;: { 
+    env-name: env-value, 
+    ... 
+  },
+  &quot;exit-code&quot;: exit-code,  
+  &quot;output&quot;: [ 
+    output-line, 
+    output-line, 
+    ...
+  ]
+</pre>
+      For interactive tasks only:
+      <pre>
+  &quot;input-data&quot;: { 
+    name: value, 
+    ... 
+  },
+  &quot;output-data&quot;: { 
+    name: value, 
+    ... 
+  }
+</pre>
+      For all tasks:
+      <pre>
+}
+</pre></td>
+    <td rowspan="2"><p>The name of the history file already contains all crucial information for most statistical and analytical purposes.</p>
+        <p>The JSON contents provide more details but the system as a whole will remain functional even if the contents are absent or corrupt.</p>
+      <p>The history file can be created simply by copying and renaming the state xxx.failed or xxx.finished file to the history directory.</p>
+      <p class="design-note">And if creating the history file fails? Is it needed to have a separate 'check' mechanism that could check for instance that a xxx.started file doesn't have a corresponding history file with the same {start-time}? I think this is not worth it: if we loose a history file but not a xxx.failed or xxx.finished file, this will be very exceptional and if we're not currently promising we're keeping history 100% accurate and for eternity.</p></td>
+  </tr>
+  <tr>
+    <td>{process type id}/{process instance id}/{task type id}.{task instance id}.{start-time}.{end-time}.failed</td>
+  </tr>
+</table>
+<h3>Distributable Package</h3>
+<p>Just like Jenkins, installation should be as simple as dropping a single executable file and running it. Likewise, a software upgrade should be a simple replacement of this single executable file. And de-installation removing this file and any additional files that have been created automatically.</p>
+<h3>Configuration</h3>
+<p>A MyProcessFlow engine can handle manage processes:</p>
+<ul>
+  <li>Each engine should also have a single config file for engine-specific (but process-agnostic) configuration</li>
+  <li>Each process should have a single config file with all process and task configuration</li>
+</ul>
+<p class="design-note">It might be useful to also have per-task configuration to re-use the same task configuration over multiple processes. This won't be considered in an initial version though.</p>
+<table width="100%" border="1" cellspacing="0" cellpadding="2">
+  <tr>
+    <th width="14%">Config file</th>
+    <th width="47%">Config File Elements</th>
+    <th width="39%">Defaults</th>
+  </tr>
+  <tr>
+    <td>{process type}.config</td>
+    <td>For all types of tasks:
+      <pre>
+{
+  &quot;process-type-id&quot;: string,
+  <span class="optional">&quot;process-type-name&quot;: string,</span>
+  <span class="optional">&quot;process-type-description&quot;: string-with-html,</span>
+  <span class="optional">&quot;engine-address&quot;: [ ip-address, ip-port ],</span>
+  <span class="optional">&quot;max-running-tasks&quot;: number,</span>
+  <span class="optional">&quot;max-starting-tasks&quot;: number,</span>
+  <span class="optional">&quot;state-directory&quot;: directory-path,</span>
+  <span class="optional">&quot;history-directory&quot;: directory-path,</span>
+  <span class="optional">&quot;max-history-files-per-task&quot;: number,</span>
+  <span class="optional">&quot;process-visualization-svg&quot;: svg-path,</span>
+  <span class="optional">&quot;process-properties&quot;: {
+    prop-name: prop-value,
+    ...
+  },</span>
+  &quot;tasks&quot;: [
+    &quot;{task-type-id}&quot;: {
+      <span class="optional">&quot;task-type-name&quot;: string,
+      &quot;task-type-description&quot;: string-with-html,</span>
+      <span class="optional">&quot;depends-on&quot;: [ task-id, ... ],</span>
+      &quot;type&quot;: &quot;automated&quot; | &quot;interactive&quot; | &quot;sub-process&quot;,
+  </pre>
+      For automated tasks only:
+      <pre>
+      &quot;command-line&quot;: [ string, ... ], 
+</pre>
+      For interactive tasks only:
+      <pre>
+      &quot;assignee&quot;: user-id | email-address,
+</pre>
+      For all types of tasks:
+      <pre>
+      <span class="optional">&quot;disabled&quot;: string,</span>
+      <span class="optional">&quot;task-properties&quot;: {
+         prop-name: prop-value,
+         ...
+      },</span>      
+    },
+    ...
+  ]
+}
+</pre>
+    </td>
+    <td><table width="100%" border="1" cellspacing="0" cellpadding="2">
+      <tr>
+        <td>Property</td>
+        <td>Default value</td>
+      </tr>
+      <tr>
+        <td>process-name</td>
+        <td>process-id</td>
+      </tr>
+      <tr>
+        <td>process-description</td>
+        <td>empty</td>
+      </tr>
+      <tr>
+        <td>engine-address</td>
+        <td>http://localhost:80/api/</td>
+      </tr>
+      <tr>
+        <td>max-running-tasks</td>
+        <td>unlimited</td>
+      </tr>
+      <tr>
+        <td>max-starting-tasks</td>
+        <td>unlimited</td>
+      </tr>
+      <tr>
+        <td>state-directory</td>
+        <td>./{process id}/state</td>
+      </tr>
+      <tr>
+        <td>history-directory</td>
+        <td>./{process-id}/history</td>
+      </tr>
+      <tr>
+        <td>process-visualization-svg</td>
+        <td>automatically created, also when the provided value doesn't match with the set of configured tasks</td>
+      </tr>
+      <tr>
+        <td>process-properties</td>
+        <td>empty</td>
+      </tr>
+      <tr>
+        <td>task-name</td>
+        <td>task-id</td>
+      </tr>
+      <tr>
+        <td>task-description</td>
+        <td>empty</td>
+      </tr>
+      <tr>
+        <td>depends-on</td>
+        <td>empty</td>
+      </tr>
+      <tr>
+        <td>disabled</td>
+        <td>false</td>
+      </tr>
+      <tr>
+        <td>task-properties</td>
+        <td>empty, if present: override process properties and are provided to the started task either as &quot;input-data&quot; or &quot;environment&quot; variables.</td>
+      </tr>
+    </table>
+        <div class="design-note">
+          <p>Possible pluggable parts:</p>
+          <ul>
+            <li>Custom process state visualization function (hook/plugin point)</li>
+            <li>Custom task ready-to-start-determination function (hook/plugin point)</li>
+            <li>Custom task status visualization function (hook/plugin point)</li>
+            <li>Custom task run visualization function (hook/plugin point)</li>
+          </ul>
+          <p>And other possible needs:</p>
+          <ul>
+            <li>sibling-engine-addresses: [ system-id: [ip-address, ip-port], ...]<br />
+              When a task needs to get executed on another system, present it to the sibling engine; state info will remain on the sibling system but be available via remote REST API</li>
+          </ul>
+        </div></td>
+  </tr>
+  <tr>
+    <td>{process}.config</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+  </tr>
+</table>
+<h3>Persistent Storage</h3>
+<p>No dependency on databases or other 3rd party products should be present. If possibly the bare file-system should be leveraged to store all persistent (and transient) information. This should have the added benefit that it is easy to update, inspect and change data with 3rd party tools.</p>
+<h3>Interfaces</h3>
+<table width="100%" border="1" cellspacing="0" cellpadding="2">
+  <tr>
+    <td width="22%">&nbsp;</td>
+    <th width="27%">CLI</th>
+    <th width="39%">REST API</th>
+    <th width="12%">Web</th>
+  </tr>
+  <tr>
+    <td width="22%">Base address</td>
+    <td width="27%">N/A</td>
+    <td width="39%"><p>/api/{api-version}?</p>
+    </td>
+    <td width="12%">/wui/</td>
+  </tr>
+  <tr>
+    <td width="22%">Version info</td>
+    <td width="27%">--version or --about</td>
+    <td width="39%">GET /api/about</td>
+    <td width="12%">/wui/about</td>
+  </tr>
+  <tr>
+    <td width="22%">Process info</td>
+    <td width="27%">--info {process-id}</td>
+    <td width="39%">GET /api/{process type}/{process run name}</td>
+    <td width="12%">/wui/</td>
+  </tr>
+  <tr>
+    <td width="22%">Task info</td>
+    <td width="27%">--info {process-id} {task-id}</td>
+    <td width="39%">GET /api/processes/{process-id}/tasks/{task-id}/current-run</td>
+    <td width="12%">/wui/</td>
+  </tr>
+  <tr>
+    <td>Task history info</td>
+    <td>--history-info {process-id} {task-id}</td>
+    <td>GET /api/processes/{process-id}/tasks/{task-id}/history</td>
+    <td>/wui/</td>
+  </tr>
+  <tr>
+    <td width="22%">Force start a task</td>
+    <td width="27%">--start {process-id} {task-id}</td>
+    <td width="39%">POST  /api/processes/{process-id}/tasks/{task-id}<br />
+      {<br />
+      &quot;user-id&quot;: string,<br />
+      &quot;input-data&quot;: { name: value, ... }<br />
+      }</td>
+    <td width="12%">/wui/</td>
+  </tr>
+  <tr>
+    <td width="22%">Kill a running task</td>
+    <td width="27%">--stop {process-id} {task-id}</td>
+    <td width="39%">DELETE  /api/processes/{process-id}/tasks/{task-id}/current-run</td>
+    <td width="12%">/wui/</td>
+  </tr>
+  <tr>
+    <td width="22%">Change status of interactive task</td>
+    <td width="27%"><p>--user-id=user-id<br />
+      --data=name:value <br />
+      --update=[failed|finished] <br />
+      {process-id} {task-id}</p></td>
+    <td width="39%"><p>PUT /api/processes/{process-id}/tasks/{task-id}<br />
+      {<br />
+      &quot;user-id&quot;: string,<br />
+      &quot;output-data&quot;: { name: value, ... },<br />
+      &quot;status&quot;: &quot;failed&quot; | &quot;finished&quot;<br />
+      }</p></td>
+    <td width="12%">/wui/</td>
+  </tr>
+  <tr>
+    <td>General options</td>
+    <td><p>--output-type=json | csv | xml<br />
+      --log-file=log-file<br />
+      --log-level=log-level<br />
+      --mode=client | server<br />
+      --config-file={process-id}.config</p></td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+  </tr>
+</table>
+<p>A single page application with:</p>
+<ul>
+  <li>Main process status dashboard (if not customized):
+    <ul>
+        <li>Execution summary + menu leading to 'process config' and 'user guide'</li>
+      <li> Right click on task leads to: 'step config', 'step run', 'step status' or can also re-enable the step </li>
+      <li>Process/task visualization (could be custom) with block nodes for tasks and blocks in following colors:
+        <ul>
+              <li>white : not executed yet and not ready for execution yet or to be executed again as at least one of its dependents was started since last execution</li>
+          <li>yellow: ready for execution but not started yet</li>
+          <li>blue  : currently executing</li>
+          <li>green : executed and successfull</li>
+          <li>red   : executed and not successfull</li>
+          <li>grey  : disabled</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>User guide:
+    <ul>
+        <li>Full user guide with links back to the 'default'/'active' process web interface</li>
+    </ul>
+  </li>
+  <li>Process configuration page:
+    <ul>
+        <li>Process name</li>
+      <li>Description (or should this just be a property)</li>
+      <li>Max. concurrently running steps</li>
+      <li>Max. concurrently starting steps</li>
+      <li>State directory</li>
+      <li>Max. number of history items to keep</li>
+      <li>History directory</li>
+      <li>Custom process state visualization function (hook/plugin point)</li>
+      <li>Properties (name/value-pairs with greyed out the runtime properties that will be calculated all the time)</li>
+      <li>Steps (add/remove/enable/disable steps)</li>
+      <li>Click on step leads to 'step config'</li>
+    </ul>
+  </li>
+  <li>Task configuration page
+    <ul>
+        <li>Name</li>
+      <li>Description (or should this just be a property)</li>
+      <li>Enabled/disabled</li>
+      <li>Needs input to run (so not run without somebody interactively having provided input properties)</li>
+      <li> Depends on following tasks</li>
+      <li>Custom task ready-to-start-determination function (hook/plugin point)</li>
+      <li>Properties (name/value-pairs with greyed out the runtime properties that will be calculated all the time)</li>
+      <li>Custom task status visualization function (hook/plugin point)</li>
+      <li>Custom task run visualization function (hook/plugin point)</li>
+    </ul>
+  </li>
+  <li>Task status page (if not customized):
+    <ul>
+        <li> Name</li>
+      <li>Enable/disabled</li>
+      <li>Ready/Waiting for Input/Running/Finished/Failed</li>
+      <li>If ready: [run now]</li>
+      <li>If waiting for input: [step run</li>
+      <li> If running: start time, run time and estimated run time</li>
+      <li>If finished: start time, finish time, run time, exit code, link to .finished file</li>
+      <li>If history kept: Links to previous .finished files, also with start time, finish time, run time and exit code</li>
+    </ul>
+  </li>
+  <li>Task run context menu:
+    <ul>
+        <li>If ready for run: [run] [cancel]</li>
+      <li>If not ready for run: [run neglecting dependencies] [run dependents first] [cancel]</li>
+      <li>Possibility to override configured properties for this run only</li>
+      <li>For non-software tasks, this could be customized to provide following fields (which would be properties but more prominently put in the HTML interface, leaving all others):
+        <pre>
++---------------------------------------+
+|   Author:                             |
+| Comments:                             |
+|   Result: [OK] [NOT OK]               |
++---------------------------------------+
+    </pre>
+        and then the task would just immediately finish un/successfully</li>
+    </ul>
+  </li>
+  <li>Task execution log</li>
+</ul>
+<pre>
+
+  
+
+Command-line Interface:
+-----------------------   
+
+Start:
+  master: wrkflw (<master-ip-address>(:<master-ip-port>)?)? --serve <project-config-file>   
+  slave : wrkflw  <master-ip-address>(:<master-ip-port>)? --slave-to
+  
+Stop:
+  master: wrkflw (<master-ip-address>(:<master-ip-port>)?)? --stop 
+
+State info:
+  wrkflw (<master-ip-address>(:<master-ip-port>)?)? --summarize-process --output-format=[csv,dot,svg,xml,txt] --output-file=<file-name>     
+  wrkflw (<master-ip-address>(:<master-ip-port>)?)? --summarize-step(s)? <step-name>+ --output-format=[csv,dot,svg,xml,txt] --output-file=<file-name> 
+
+Step exec:
+  wrkflw (<master-ip-address>(:<master-ip-port>)?)? (--no-dependency-tracking)? --run-step(s)? <step-name>+ 
+  wrkflw (<master-ip-address>(:<master-ip-port>)?)? --stop-step(s)? <step-name>+ 
+  
+   
+Implementation Choices
+======================
+
+
+   
+Components:
+  - Model components: [Process] [Step] [Engine]
+  - Controller: [Wrkflw]
+  - View components: [WebInterface] [CommandLineInterface]
+  
+                [CommandLineInterface]
+                   /\
+                   |
+                   \/
+          client:[Wrkflw] 
+                   /\ 
+                    |---------&gt; [ExecutionEngine] &lt;-----&gt; [state directory]
+                    |
+                   \/
+          server:[Wrkflw] &lt;---&gt; [Engine]   
+                   /\             /\ 
+                   \/              |
+          [WebInterface]           |
+                                   \/ 
+                                [Process]
+                                  - Name
+                                  - Steps ---------&gt; [Step] &lt;-------------+
+                                  - Props              - Name             |
+                                                       - DependentSteps --+
+                                                       - Props   
+                               
+</pre>
+</body>
+</html>

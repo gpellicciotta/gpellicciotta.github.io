@@ -1,0 +1,498 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="../media/style.css" rel="stylesheet" type="text/css" media="all" />
+<title>File Synchronization</title>
+</head>
+<body>
+<h1>File Synchronization</h1>
+<h3>Use Cases</h3>
+<p>I often need to synchronize two directories because:
+  <ol>
+    <li>I've taken a copy and placed it on my laptop for offline use and want to re-synchronize the server version later (and others might have&nbsp;changed that copy too)</li>
+    <li>want to backup to an external drive, which I also backup to from other machines</li>
+  </ol>
+</p>
+<p>Actually, in some situations I want to backup more than two directories like when I want to have my photo collection on my personal laptop, on my work laptop, on my desktop and on my backup external drive. I might add photo's to each of those locations at any given time and want to have the other locations synchronized (i.e. receiving the new photo's) automatically.</p>
+<p>But how would this file/dir synchronization work?</p>
+<h3>Problem Description</h3>
+<p>(This is my first take on it)</p>
+<p>Syncing n (typically 2) dirs means:</p>
+  <ul>
+    <li>Determining changes since last sync operation in all dirs</li>
+    <li>Applying non-conflicting changes to other dirs</li>
+    <li>Listing (and possibly resolving manually) conflicting changes&nbsp;</li>
+  </ul>
+  <div>Following types of change-scenario's may occur:</div>
+</div>
+<div>
+  <blockquote>
+    <table border="1" bordercolor="#888" cellspacing="0" style="border-collapse:collapse;border-top-color:rgb(136,136,136);border-right-color:rgb(136,136,136);border-bottom-color:rgb(136,136,136);border-left-color:rgb(136,136,136);border-top-width:1px;border-right-width:1px;border-bottom-width:1px;border-left-width:1px">
+      <tbody>
+        <tr>
+          <td style="width:164px;height:24px">&nbsp;<b>One Dir</b><span>&nbsp;&nbsp;&nbsp;</span></td>
+          <td style="width:208px;height:24px"><b>Other Dirs&nbsp;</b></td>
+          <td style="width:511px;height:24px"><b>Sync Effect</b></td>
+        </tr>
+        <tr>
+          <td style="width:164px;height:15px">New file/dir<span>&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;</span></td>
+          <td style="width:208px;height:15px">No equally named file/dir<span>&nbsp;&nbsp; &nbsp;</span></td>
+          <td style="width:511px;height:15px">Add new file/dir to other dirs</td>
+        </tr>
+        <tr>
+          <td style="width:164px;height:60px">New file</td>
+          <td style="width:208px;height:60px">Also added in some other dirs, with exact same contents; not present in rest of dirs</td>
+          <td style="width:511px;height:60px">Add new file/dir to dirs in which it is not present yet<span>&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;</span>&nbsp;</td>
+        </tr>
+        <tr>
+          <td style="width:164px;height:137px">New file</td>
+          <td style="width:208px;height:137px">Also added in at least one other dir, with other file contents</td>
+          <td style="width:511px;height:137px">Conflict, possible resolution strategies:<br />
+            <ul>
+              <li>Look at time-stamps of adds and let latest win (if time stamps can be compared) (e.g. added yesterday with contents a, today with contents a' -&gt; add everywhere with contents a')</li>
+              <li>If the addition is done in more than one dir: let majority win (e.g. 2x added with contents a, 1x added with contents a' -&gt; add everywhere with contents a)</li>
+            </ul></td>
+        </tr>
+        <tr>
+          <td style="width:164px;height:15px">Deleted file/dir&nbsp;&nbsp;</td>
+          <td style="width:208px;height:15px">Same file/dir untouched&nbsp;</td>
+          <td style="width:511px;height:15px">Delete file/dir in other dirs&nbsp;&nbsp;</td>
+        </tr>
+        <tr>
+          <td style="width:164px;height:137px">Deleted file/dir&nbsp;&nbsp;</td>
+          <td style="width:208px;height:137px">Same file/dir contents changed in at least one other dir</td>
+          <td style="width:511px;height:137px">Conflict, possible resolution strategies:<br />
+            <ul>
+              <li>Always undo delete and distribute change</li>
+              <li>Look at time-stamps of changes and let lasted win (if time-stamps can be compared) (e.g. changed yesterday, deleted one week ago -&gt; change everywhere)</li>
+              <li>If the change or delete is applied in more than one dir: let majority win (e.g. 2x deleted, 1x changed -&gt; delete everywhere)</li>
+            </ul></td>
+        </tr>
+        <tr>
+          <td style="width:164px;height:15px">Changed file contents&nbsp;</td>
+          <td style="width:208px;height:15px">Same file untouched&nbsp;</td>
+          <td style="width:511px;height:15px">Copy changed file contents to other dirs&nbsp;</td>
+        </tr>
+        <tr>
+          <td style="width:164px;height:63px">Changed file contents&nbsp;</td>
+          <td style="width:208px;height:63px">Also changed in some other dirs, with exact same contents; not changed in rest of dirs</td>
+          <td style="width:511px;height:63px">Distribute change to dirs in which it is not applied yet&nbsp;</td>
+        </tr>
+        <tr>
+          <td style="width:164px;height:137px">Changed file contents</td>
+          <td style="width:208px;height:137px">Also changed in at least one other dir, with different file contents&nbsp;</td>
+          <td style="width:511px;height:137px">Conflict, possible resolution strategies:<br />
+            <ul>
+              <li>Look at time-stamps of changes&nbsp;and let latest win (if time stamps can be compared) (e.g. changed&nbsp;yesterday with contents a, today with contents a' -&gt; change&nbsp;everywhere to&nbsp;contents a')</li>
+              <li>If the change&nbsp;is done in more than one dir: let majority win (e.g. 2x changed&nbsp;with contents a, 1x changed&nbsp;with contents a' -&gt; change&nbsp;everywhere to&nbsp;contents a)</li>
+            </ul></td>
+        </tr>
+        <tr>
+          <td style="width:164px;height:137px">Changed file contents&nbsp;</td>
+          <td style="width:208px;height:137px">Deleted in other dir</td>
+          <td style="width:511px;height:137px">Conflict, possible resolution strategies:<br />
+            <ul>
+              <li>Always undo delete and distribute change</li>
+              <li>Look at time-stamps of changes and let lasted win (if time-stamps can be compared) (e.g. changed yesterday, deleted one week ago -&gt; change everywhere)</li>
+              <li>If the change or delete is applied in more than one dir: let majority win (e.g. 2x deleted, 1x changed -&gt; delete everywhere)</li>
+            </ul></td>
+        </tr>
+        <tr>
+          <td style="width:164px;height:200px">Changed file contents&nbsp;&nbsp;</td>
+          <td style="width:208px;height:200px">Deleted in some other dirs, also changed with same contents in some other dirs and changed with other contents in yet other dirs.&nbsp;</td>
+          <td style="width:511px;height:200px">Conflict, possible resolution strategies:
+            <ul>
+              <li>Look at time-stamps of changes/deletes and let lasted win (if time-stamps can be compared) (e.g. changed to a' yesterday, changed to a two weeks ago, deleted one week ago -&gt; change everywhere to a')</li>
+              <li>If the changes or deletes are applied in more than one dir: let majority win (e.g. 2x deleted, 1x changed to a', 1x changed to a -&gt; delete everywhere)</li>
+              <li>Discard deletes and apply one of the above resolution strategies to the changes only</li>
+            </ul>
+            <br />
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </blockquote>
+</div>
+<div><span style="border-collapse:collapse">
+  <div><br />
+  </div>
+  <div>Or, with following sync file status codes:</div>
+  <div>
+    <blockquote>
+      <table border="1" bordercolor="#888" cellspacing="0" style="border-collapse:collapse;border-top-color:rgb(136,136,136);border-right-color:rgb(136,136,136);border-bottom-color:rgb(136,136,136);border-left-color:rgb(136,136,136);border-top-width:1px;border-right-width:1px;border-bottom-width:1px;border-left-width:1px">
+        <tbody>
+          <tr>
+            <td style="width:85px;height:15px">&nbsp;A<span>&nbsp;&nbsp; &nbsp;</span></td>
+            <td style="width:247px;height:15px">Added&nbsp;</td>
+          </tr>
+          <tr>
+            <td style="width:85px;height:15px">&nbsp;D</td>
+            <td style="width:247px;height:15px">Deleted&nbsp;</td>
+          </tr>
+          <tr>
+            <td style="width:85px;height:15px">&nbsp;C</td>
+            <td style="width:247px;height:15px">Changed<span>&nbsp;&nbsp; &nbsp;</span>&nbsp;</td>
+          </tr>
+          <tr>
+            <td style="width:85px;height:15px">&nbsp;U</td>
+            <td style="width:247px;height:15px">Unchanged</td>
+          </tr>
+          <tr>
+            <td style="width:85px;height:15px">&nbsp;-</td>
+            <td style="width:247px;height:15px">Doesn't Exist&nbsp;</td>
+          </tr>
+          <tr>
+            <td style="width:85px;height:30px">&nbsp;?</td>
+            <td style="width:247px;height:30px">Exists but Status Unknown&nbsp;</td>
+          </tr>
+        </tbody>
+      </table>
+    </blockquote>
+  </div>
+  <div>and following sync status codes:</div>
+  <div>
+    <blockquote>
+      <table border="1" bordercolor="#888" cellspacing="0" style="margin-top:0px;margin-right:0px;margin-bottom:0px;margin-left:0px;border-collapse:collapse;border-top-color:rgb(136,136,136);border-right-color:rgb(136,136,136);border-bottom-color:rgb(136,136,136);border-left-color:rgb(136,136,136);border-top-width:1px;border-right-width:1px;border-bottom-width:1px;border-left-width:1px">
+        <tbody>
+          <tr>
+            <td style="vertical-align:top;width:85px;height:15px"><span>S &nbsp;</span></td>
+            <td style="vertical-align:top;width:247px;height:15px">In-sync</td>
+          </tr>
+          <tr>
+            <td style="vertical-align:top;width:85px;height:15px">C</td>
+            <td style="vertical-align:top;width:247px;height:15px">Conflict&nbsp;</td>
+          </tr>
+          <tr>
+            <td style="vertical-align:top;width:85px;height:15px">L</td>
+            <td style="vertical-align:top;width:247px;height:15px">Local File is reference</td>
+          </tr>
+          <tr>
+            <td style="vertical-align:top;width:85px;height:15px">R<span>&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;</span></td>
+            <td style="vertical-align:top;width:247px;height:15px">Remote file is reference</td>
+          </tr>
+          <tr>
+            <td style="vertical-align:top;width:85px;height:30px">?</td>
+            <td style="vertical-align:top;width:247px;height:30px">Conflict if contents are unequal</td>
+          </tr>
+        </tbody>
+      </table>
+    </blockquote>
+  </div>
+  <div><br />
+  </div>
+  <div>we get to following sync status matrix:</div>
+  <div>
+    <blockquote>
+      <table border="1" bordercolor="#888" cellspacing="0" style="border-collapse:collapse;border-top-color:rgb(136,136,136);border-right-color:rgb(136,136,136);border-bottom-color:rgb(136,136,136);border-left-color:rgb(136,136,136);border-top-width:1px;border-right-width:1px;border-bottom-width:1px;border-left-width:1px">
+        <tbody>
+          <tr>
+            <td style="width:103px;height:31px">&nbsp;<br />
+              <br />
+            </td>
+            <td colspan="6" style="text-align:center;width:258px;height:31px"><b>Remote Status&nbsp;</b></td>
+          </tr>
+          <tr>
+            <td style="width:103px;height:44px"><div style="text-align:center"><b>&nbsp;Local Status</b></div>
+              <br />
+            </td>
+            <td style="text-align:center;width:34px;height:44px"><b>-</b></td>
+            <td style="text-align:center;width:44px;height:44px"><b>U</b></td>
+            <td style="text-align:center;width:44px;height:44px"><b>C</b></td>
+            <td style="text-align:center;width:44px;height:44px"><b>?</b></td>
+            <td style="text-align:center;width:44px;height:44px"><b>A</b></td>
+            <td style="text-align:center;width:48px;height:44px"><b>D</b></td>
+          </tr>
+          <tr>
+            <td style="text-align:center;width:103px;height:24px"><b>-</b></td>
+            <td style="text-align:center;width:34px;height:24px">S</td>
+            <td style="text-align:center;width:44px;height:24px">R</td>
+            <td style="text-align:center;width:44px;height:24px">R</td>
+            <td style="text-align:center;width:44px;height:24px">R</td>
+            <td style="text-align:center;width:44px;height:24px">R</td>
+            <td style="text-align:center;width:48px;height:24px">S</td>
+          </tr>
+          <tr>
+            <td style="text-align:center;width:103px;height:15px"><b>U</b></td>
+            <td style="text-align:center;width:34px;height:15px">L</td>
+            <td style="text-align:center;width:44px;height:15px">S</td>
+            <td style="text-align:center;width:44px;height:15px">R</td>
+            <td style="text-align:center;width:44px;height:15px">R</td>
+            <td style="text-align:center;width:44px;height:15px">R</td>
+            <td style="text-align:center;width:48px;height:15px">R</td>
+          </tr>
+          <tr>
+            <td style="text-align:center;width:103px;height:15px"><b>C</b></td>
+            <td style="text-align:center;width:34px;height:15px">L</td>
+            <td style="text-align:center;width:44px;height:15px">L</td>
+            <td style="text-align:center;width:44px;height:15px">C</td>
+            <td style="text-align:center;width:44px;height:15px">C</td>
+            <td style="text-align:center;width:44px;height:15px">C</td>
+            <td style="text-align:center;width:48px;height:15px">C</td>
+          </tr>
+          <tr>
+            <td style="text-align:center;width:103px;height:15px"><b>?</b></td>
+            <td style="text-align:center;width:34px;height:15px">L</td>
+            <td style="text-align:center;width:44px;height:15px">L</td>
+            <td style="text-align:center;width:44px;height:15px">C</td>
+            <td style="text-align:center;width:44px;height:15px">C</td>
+            <td style="text-align:center;width:44px;height:15px">C</td>
+            <td style="text-align:center;width:48px;height:15px">C</td>
+          </tr>
+          <tr>
+            <td style="text-align:center;width:103px;height:15px"><b>A</b></td>
+            <td style="text-align:center;width:34px;height:15px">L</td>
+            <td style="text-align:center;width:44px;height:15px">L</td>
+            <td style="text-align:center;width:44px;height:15px">C</td>
+            <td style="text-align:center;width:44px;height:15px">C</td>
+            <td style="text-align:center;width:44px;height:15px">C</td>
+            <td style="text-align:center;width:48px;height:15px">C</td>
+          </tr>
+          <tr>
+            <td style="text-align:center;width:103px;height:15px"><b>D</b></td>
+            <td style="text-align:center;width:34px;height:15px">S</td>
+            <td style="text-align:center;width:44px;height:15px">L</td>
+            <td style="text-align:center;width:44px;height:15px">C</td>
+            <td style="text-align:center;width:44px;height:15px">C</td>
+            <td style="text-align:center;width:44px;height:15px">C</td>
+            <td style="text-align:center;width:48px;height:15px">S</td>
+          </tr>
+        </tbody>
+      </table>
+    </blockquote>
+  </div>
+  <div><br />
+  </div>
+  <div><br />
+  </div>
+  <div>Note that there might be more complex scenario's that&nbsp;are difficult to recognize correctly:</div>
+  <div>
+    <ul>
+      <li>Move/rename of a sub-dir in location 1</li>
+      <li>Change of file contents in same sub-dir in location 2</li>
+    </ul>
+    <div>This will be seen as:</div>
+  </div>
+  <div>
+    <ul>
+      <li>Delete of sub-dir in location-1</li>
+      <li>Add of new sub-dir in location-1</li>
+      <li>Change of file in sub-dir in location-2</li>
+    </ul>
+    <div>With the effect of:</div>
+  </div>
+  <div>
+    <ul>
+      <li>Add new sub-dir in location-2 too</li>
+      <li>Re-add old sub-dir with changed file from location-2 in location-1</li>
+    </ul>
+    <div>So we would end up with two sub-dirs instead of the more likely wanted situation:</div>
+  </div>
+  <div>
+    <ul>
+      <li>Move/rename sub-dir in location-2 too</li>
+      <li>Distribute file change from location-2 to renamed sub-dir in location-1</li>
+    </ul>
+    <div><br />
+    </div>
+  </div>
+  </span></div>
+<h3>Architecture</h3>
+<div><br />
+</div>
+<h4>Questions</h4>
+<div>
+  <ul>
+    <li>How to keep track of changes since last sync time (and in the light of multiple (&gt;2) dirs to sync)|<br />
+      ? Maybe just use creation/modification times and keep last sync time<br />
+      ? Maybe keep cache of file-system state at last sync time: keep list of file names with their size, times and checksum<br />
+      ? Maybe add file-system hook that can record all file-system operations: change, rename, copy, create, delete, ... ?<br />
+      <br />
+    </li>
+    <li>How to detect different types of changes: <b>added</b>, <b>deleted</b>, (<b>content) changed</b>, <b>renamed/moved</b>,
+      <div style="display:inline;height:auto;width:auto"><b>copied</b></div>
+      <b><br />
+      <table border="1" bordercolor="#888" cellspacing="0" style="border-collapse:collapse;border-top-color:rgb(136,136,136);border-right-color:rgb(136,136,136);border-bottom-color:rgb(136,136,136);border-left-color:rgb(136,136,136);border-top-width:1px;border-right-width:1px;border-bottom-width:1px;border-left-width:1px">
+        <tbody>
+          <tr>
+            <td style="width:115px;height:15px">&nbsp;Change Typ</td>
+            <td style="width:735px;height:15px">Possible Detection Mechanisms&nbsp;</td>
+          </tr>
+          <tr>
+            <td style="width:115px;height:31px"><span style="font-weight:normal">&nbsp;Added</span></td>
+            <td style="width:735px;height:31px"><span style="border-collapse:separate;font-weight:normal">1. Creation time later than last sync-time<br />
+              2.&nbsp;Not in list of names at previous sync-time</span></td>
+          </tr>
+          <tr>
+            <td style="width:115px;height:63px"><span style="font-weight:normal">&nbsp;Deleted</span></td>
+            <td style="width:735px;height:63px"><span style="border-collapse:separate;font-weight:normal">1. Was in list of names at previous sync-time</span><span style="border-collapse:separate;font-weight:normal"><br />
+              </span><span style="border-collapse:separate;font-weight:normal">2. Still is part of other location and there it is not added</span><span style="border-collapse:separate;font-weight:normal"><br />
+              </span><span style="border-collapse:separate;font-weight:normal">&nbsp;&nbsp; &nbsp;Note: if deleted in all location: no way to detect it was deleted, but no<br />
+              &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;sync activity is needed anyway!</span></td>
+          </tr>
+          <tr>
+            <td style="width:115px;height:62px"><span style="font-weight:normal">&nbsp;Changed</span></td>
+            <td style="width:735px;height:62px"><span style="font-weight:normal">1. Last modification time is after previous sync-time<br />
+              2. Attributes (size, checksum, full content) have changed since previous sync-time<br />
+              3. Attributes and/or content are different from content in other locations</span></td>
+          </tr>
+          <tr>
+            <td style="width:115px;height:15px"><span style="font-weight:normal">&nbsp;Renamed</span></td>
+            <td style="width:735px;height:15px"><span style="font-weight:normal">1. Added and deleted file have exact same attributes and contents<br />
+              2. Added file has exact same size, checksum and -- Windows only: creation/last-modified time -- as deleted file<br />
+              </span></td>
+          </tr>
+          <tr>
+            <td style="width:115px;height:15px"><span style="font-weight:normal">&nbsp;Copied</span></td>
+            <td style="width:735px;height:15px"><span style="font-weight:normal">1. Added file has exact same attributes and contents as existing file<br />
+              2. Windows only: Added file has exact same size, checksum and last-modified time as other file, and the creation time is later than the last-modified time</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <br />
+      <br />
+      </b></li>
+    <li>How to ensure a fast operation in which files - and certainly remote files - don't need to be read completely for comparison<br />
+      &gt; First compare based on size and time-stamps, then on checksums<br />
+      ? Use Rsync protocol<br />
+      <br />
+    </li>
+    <li>How to ensure fast 'copy-over' operations?<br />
+      &gt; Rsync protocol seems to be the answer.</li>
+  </ul>
+</div>
+<h4><br />
+</h4>
+<h4>General Algorithm</h4>
+<div>
+  <ol>
+    <li>Determine change-history in each location separately: which changes have occurred since last sync-time with other dir(s).<br />
+      If there was no previous sync-time: consider all files/dirs as newly added</li>
+    <li>Make complete changes overview, listing for each file/dir that appears in any of the sync locations: what changes have occurred in every of the sync locations</li>
+    <li>For each file/dir in the changes overview:</li>
+    <ol>
+      <li>Determine the change scenario this file is part of</li>
+      <li>Optionally ask for manual resolution in case of conflict</li>
+      <li>Add sync-step to sync-steps script (but don't apply yet)</li>
+    </ol>
+    <li>Apply sync-steps script:</li>
+    <ol>
+      <li>If situation has not changed since start of sync: apply sync-step</li>
+      <li>Sync-steps may fails (due to a file being locked/edited for instance, or a network connection going down)</li>
+    </ol>
+    <li>Optionally update the sync-state after the sync operation is finished - preparing for an upcoming sync-operation</li>
+  </ol>
+  <div><br />
+  </div>
+  <h4>Principles</h4>
+</div>
+<div>
+  <ul>
+    <li>Needs to be cross-platform: at least Linux and Windows must be supported</li>
+    <li>Failures may only lead to a longer sync-time, never to data being lost</li>
+  </ul>
+</div>
+<div><br />
+</div>
+<h3>Extended Architecture</h3>
+<div><br />
+</div>
+<div>Going beyond the syncing of 2 local directories, the goals could become:</div>
+<div>
+  <ul>
+    <li>Sync any number of directories, on any number of machines</li>
+  </ul>
+  <div>This brings in a new set of (potential) issues:</div>
+</div>
+<div>
+  <ul>
+    <li>How to communicate between the different machines?</li>
+    <li>Need for even more 'data transfer' efficieny</li>
+    <li>Different machines have different clocks - try not to rely on this any more</li>
+    <li>How do the different machines get in touch?</li>
+    <li>Who keeps track of what has been synced, when and between what machines/locations?</li>
+    <li><br />
+    </li>
+  </ul>
+</div>
+<div><br />
+</div>
+<h4>First Ideas</h4>
+<div><br />
+</div>
+<div>Install software as a daemon/service on each machine, with as only config: the location of the 'master' which is supposed to be the same daemon/service but the one most likely to keep running and being reachable.&nbsp;</div>
+<div><br />
+</div>
+<div>All sync daemons/services offer the following functionality:</div>
+<div>
+  <ul>
+    <li>Mark a local directory as 'to-be-synced' (these dirs will be communicated with the master service too)</li>
+    <li>Setup sync rules:</li>
+    <ul>
+      <li>Sync to local directories</li>
+      <li>Sync with remote directory: for this the master service is asked a list of all dirs marked as 'to-be-synced'; from this list a remote sync part can be chosen: the master will then also provide the contact details for the remote dir's supervising sync service</li>
+      <li>All rules may indicate a schedule for syncing</li>
+    </ul>
+    <li>When it's sync time, the sync service will:</li>
+    <ul>
+      <li>Sync all rules involving only local dirs (just as in the simple architecture)</li>
+      <li>For rules involving one or more remote dirs, try to contact the remote sync service:</li>
+      <ul>
+        <li>If offline, sync-ing cannot happen</li>
+        <li>If available: work with remote sync service</li>
+      </ul>
+    </ul>
+  </ul>
+  The big question here is: organize sync <b>centrally </b>or
+  <div style="display:inline;height:auto;width:auto"><b>decentralized</b></div>
+  <b>decentralized</b>?</div>
+<div><br />
+</div>
+<div>Central makes several things easier:&nbsp;</div>
+<div>
+  <ol>
+    <li>One location to setup sync config</li>
+    <li>One location with a full overview of the sync config</li>
+    <li>No (or less) possibility of two parties instantiating a sync of the same dirs in parallel</li>
+  </ol>
+</div>
+<div><br />
+</div>
+<div>Decentralized would be:</div>
+<div>
+  <ul>
+    <li>More reliable</li>
+    <li>Less obvious to setup/implement</li>
+  </ul>
+</div>
+<div><br />
+</div>
+<h3>References</h3>
+<div><br />
+</div>
+<div>After doing the above 'design', I've found a reference to Unison which appears to be a mature tool (impl. in Ocaml/open source) built more than 10 years ago and starting from the same principles. Here are some relevant links to the Unison docs:</div>
+<div><br />
+</div>
+<div>&nbsp;&nbsp;Home Page: <a href="http://www.cis.upenn.edu/~bcpierce/unison/">http://www.cis.upenn.edu/~bcpierce/unison/</a></div>
+<div>&nbsp;&nbsp;User Manual: <a href="http://www.cis.upenn.edu/~bcpierce/unison/download/releases/stable/unison-manual.html">http://www.cis.upenn.edu/~bcpierce/unison/download/releases/stable/unison-manual.html</a></div>
+<div>&nbsp;&nbsp;Research Papers:&nbsp;<a href="http://www.cis.upenn.edu/~bcpierce/papers/index.shtml#Synchronization">http://www.cis.upenn.edu/~bcpierce/papers/index.shtml#Synchronization</a></div>
+<div><br />
+</div>
+<div>Another tool (impl. in Java/open source) is DirSync Pro:&nbsp;<a href="http://directorysync.sourceforge.net/">http://directorysync.sourceforge.net/</a></div>
+<div><br />
+</div>
+<div>RUMOR seems to be a comparable project:&nbsp;<a href="http://www.lasr.cs.ucla.edu/travler/rumor_position_paper.html">http://www.lasr.cs.ucla.edu/travler/rumor_position_paper.html</a></div>
+<div><br />
+</div>
+<div>RSync links:</div>
+<div>&nbsp;&nbsp;Home Page:&nbsp;<a href="http://www.samba.org/rsync/">http://www.samba.org/rsync/</a></div>
+<div>&nbsp;&nbsp;How It Works:&nbsp;<a href="http://www.samba.org/rsync/how-rsync-works.html">http://www.samba.org/rsync/how-rsync-works.html</a></div>
+<div>&nbsp;&nbsp;Technical Report:&nbsp;<a href="http://rsync.samba.org/tech_report/">http://rsync.samba.org/tech_report/</a></div>
+<div><br />
+</div>
+<div>Description of available *NIX timestamps:&nbsp;<a href="http://linuxpoison.blogspot.com/2008/03/ctime-atime-and-mtime.html">http://linuxpoison.blogspot.com/2008/03/ctime-atime-and-mtime.html</a></div>
+<div>Description of available Windows timestamps:&nbsp;</div>
+<div><br />
+</div>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="../media/style.css" rel="stylesheet" type="text/css" media="all" />
+<title>Standard Project Directory Layout</title>
+</head>
+<body>
+<h1>Standard Project Directory Layout</h1>
+The goals are:
+<div>
+<ul><li>Consistency - a simple set of rules, applied everywhere and for each type of software project</li>
+<li>Intuitiveness - how easy is it to find things</li>
+<li>Conciseness - shorter names and shorter paths are better unless they become less readable</li></ul>
+<div><br />
+</div>
+<div>A project directory structure should hold all artifacts that belong to a project and it should distinguish between:</div>
+<div>
+<ol><li>Those artifacts which are actually being maintained (e.g. source code, build scripts, ...). These should be under version control.</li>
+<li>Those artifacts that get generated automatically (e.g. compiled objects, javadocs, ...)</li>
+</ol>
+<div>There is still another category:&nbsp;those artifacts that are not maintained but that are necessary at build or at runtime (e.g. libraries, build tools, ...). These should typically not be included in a project's directory structure as they can be shared between multiple projects.</div>
+</div>
+<div><br />
+</div>
+<div>Artifacts of category 1 that typically belong to a software project:</div>
+<div>
+<ul><li>The source code itself</li>
+<li>Documentation (both developer and end-user); this typically doesn't include issues/tickets but it should it <a href="https://sites.google.com/site/giothoughts/home/software-project-ideas/bug-tracking-via-text-files-under-version-control">my opinion</a>.</li>
+<li>Test-data&nbsp;</li>
+<li>Other resources needed to build a complete package (e.g. icons, licence, ...)</li>
+<li>Build scripts</li></ul>
+<div><br />
+</div>
+<h4>Proposed directory layout</h4>
+<div><br />
+</div>
+<div>
+<ul><li>[project name]</li>
+<ul><li>&lt;readme file&gt;</li>
+<li>&lt;build script(s)&gt;</li>
+<li>&lt;build properties&gt;</li>
+<li>&nbsp;</li>
+<li>[java]</li>
+<li>[c]</li>
+<li>[python]</li>
+<li>[antlr]</li>
+<li>&nbsp;</li>
+<li>[resources]</li>
+<li>[docs]</li>
+<li>&nbsp;</li>
+<li>[build]</li></ul></ul>
+</div>
+<div><br />
+</div>
+<div>For Java-only projects:</div>
+<div><br />
+</div>
+<div>
+<div>
+<ul><li>[project name]</li>
+<ul><li>readme.txt</li>
+<li>build.xml</li>
+<li>build.properties</li>
+<li>&nbsp;</li>
+<li>[java]</li>
+<ul><li>[main]</li>
+<ul><li>**/*.java</li></ul>
+<li>[test]</li>
+<ul><li>**/*.java</li></ul></ul>
+<li>[grammar]</li></ul>
+<ul>
+<ul><li>**/*.g</li></ul></ul>
+<ul><li>&nbsp;</li>
+<li>[resources]</li>
+<li>[docs]</li>
+<li>&nbsp;</li>
+<li>[build]</li>
+<ul><li>[java]</li>
+<li>[classes]</li>
+<li>[jars]</li>
+<li>[distro]</li>
+<li>[javadocs]</li></ul>
+<div><br />
+</div></ul></ul>
+</div>
+</div>
+<div>
+<div>For c-only projects:</div>
+<div><br />
+</div>
+<div>
+<div>
+<ul><li>[project name]</li>
+<ul><li>readme.txt</li>
+<li>Makefile</li>
+<li>&nbsp;</li>
+<li>[c]</li>
+<ul><li>**/*.c</li>
+<li>**/*.h</li></ul>
+<li>[grammar]</li></ul>
+<ul>
+<ul><li>**/*.y</li>
+<li>**/*.l</li></ul></ul>
+<ul><li>&nbsp;</li>
+<li>[resources]</li>
+<li>[docs]</li>
+<li>&nbsp;</li>
+<li>[build]</li>
+<ul><li>[c]</li>
+<li>[h]</li>
+<li>[objects]</li>
+<li>[libs]</li>
+<li>[distro]</li>
+<li>[doxygen-docs]</li></ul></ul></ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="../media/style.css" rel="stylesheet" type="text/css" media="all" />
+<title>Separation of Concerns</title>
+</head>
+<body>
+<h1>Separation of Concerns</h1>
+<p>Software architecture's primary concern is marking clear boundaries between the various 'modules' or 'parts' that make up an application or system. </p>
+<p>These boundaries are so important because they determine how the software will be able to evolve, both in term of what features can be added over time and how they can be added: by whom and in which order. </p>
+<p>An ideal software architecture acknowledges: </p>
+<ul>
+  <li>The likely needed evolution paths, while also leaving room for unanticipated evolution</li>
+  <li>The likely development roles/types that will be involved (e.g. DB admins &lt;&gt; UI/UX designers &lt;&gt; coders)</li>
+</ul>
+<h2>DM-(PM-V)*</h2>
+<p>A triade consisting of:</p>
+<ul>
+  <li>DM - Domain Model: the business/domain data model + core logic acting on that data</li>
+  <li>PM - V: Presentation Model with Views: per UI, there can be a presentation model with 1 or more views:</li>
+  <ul>
+    <li>The PM encapsulates all view state and takes care of communicating and observing the DM</li>
+    <li>The view is a 'passive view': it consists of UI (hierarchical components) layout only, while delegating all state-changes/events to the PM. Any data binding is also to PM data and never directly to DM data.</li>
+  </ul>
+</ul>
+<h3>Why?</h3>
+<p>Separate DM:</p>
+<ul>
+  <li>enables the dev. of multiple interaction modes: CLI, fat GUI, thin web-app UI, ...</li>
+  <li>DM devs. don't need to know about UI technologies</li>
+</ul>
+<p>Separate PM:</p>
+<ul>
+  <li>having one central 'view controller', encapsulating all view state changes and all interaction with the DM, makes it possible to also test the presentation layout without needing actual UI components (at least if the PM's interaction with the actual view components can be stubbed out somehow)</li>
+</ul>
+<p>Passive View:</p>
+<ul>
+  <li>can be created and updated by visual designers without needing any programming skills</li>
+  <li>makes it easy to create a mock for testing of the PM</li>
+</ul>
+<h3>In Practice</h3>
+<h4>Example app: timesheet entry</h4>
+<h5>DM:</h5>
+<p>Database tables: </p>
+<ul>
+  <li>tblUsers (ID, Name, Password Nonce, Password Hash, Admin Rights)</li>
+  <li> tblTimeDetails (ID, User_ID, Message, Start_DateTime, End_DateTime, Tags, Status)</li>
+  <li> optionally also tblActivityLog (ID, User_or_Time_Detail, User_or_Time_Detail_ID, User_ID, Activity, Change_DateTime)</li>
+  <li> tblValidTags (Tag)</li>
+</ul>
+A core module with following operations: addUser, changeUser, removeUser, getUsers, addTimeDetail, getTimeDetails, changeTimeDetail, removeTimeDetail and a way of providing criteria for selecting users and time-details
+<p></p>
+Three PM+V combinations: fat client (Java Swing), web UI and CLI:
+<h5>Web UI PM+Vs:</h5>
+<p>V consists of following layouts/screens:</p>
+<ol>
+  <li>One 'Registration' screen</li>
+  <li>One 'Unregistration' screen</li>
+  <li>One 'Login' screen with 'User ID' and 'Password' fields requiring authentication, leading to either 'Admin Overview' for admins or 'Time Entry' for normal users</li>
+  <li>For admins only:</li>
+  <ol>
+    <li>The 'Admin Overview' has following action buttons: 'Search, Change and/or Delete User(s)', 'Add New User(s)', 'Search, Change and/or Delete Time Detail(s)', 'Timesheet Entry as Normal User' &nbsp;</li>
+    <li>One&nbsp;'Search, Change and/or Delete User(s)'&nbsp;screen allowing to search for via a 'Search Pane' and a 'Results Pane' showing rows for each user with checkboxes and following buttons: 'Change', 'Delete' and an 'Add New User' butting leading to the 'Add New User(s)' panel. 'Change' leads to the 'User Details' layout</li>
+    <li>The 'Add New User(s)' screen with fields for each user property and 'Add another new user', 'Cancel' and 'OK' buttons, the last one leading to the previous screen with the list of all users; this same layout, in a slightly adapted way, is re-used also for the 'Change User' action, but then with 'Next/Previous' buttons to go through the list of users selected for 'Change'. This screen also has an 'Commit' or 'OK' button confirming the change or creation action.</li>
+    <li>One&nbsp;'Search, Change and/or Delete Time Details'&nbsp;screen allowing to search for via a 'Search Pane' and a 'Results Pane' showing rows for each time detail with checkboxes and following buttons: 'Change' and 'Delete' . 'Change' leads to the 'Time Details' layout</li>
+    <li>The 'Time Details' screen has&nbsp;'Next/Previous' buttons to go through the list of time-details selected for 'Change'. This screen also has an 'Commit' or 'OK' button confirming the change action. In comparison to the same screen for non-admin users, this screen features some additional 'admin only' fields: 'Status'</li>
+  </ol>
+  <li>One 'Time Entry' screen featuring a calendar panel allowing for easy day selection (and defaulting to current day) and then a details panel, with rows with enforce at least one time-spec (e.g. 0.25h or 15m or 2h 30m or 14:15-14:45) and a non-empty message, while also allowing one or more tags (e.g. [gial] [data]) between square brackets. Auto-completion help is provided for tags op opening square-bracket and for user names one with: , and for tickets on for: ,. The details panel actually features two parts, one showing all previously entered details, and one 'top row' which is bigger and there for entering a new time detail (to be added to/remove from the list by the 'Add/Change/Remove' button) or for changing the time detail selected from the list.</li>
+  <li>'Logout' leads again to the 'Login' screen for the webapp</li>
+</ol>
+<p>PM takes care of:</p>
+<ul>
+  <li>Registration, including sending mail, accepting registration confirmation and creating a new user account</li>
+  <li>Authentication, and&nbsp;</li>
+  <li>Moving data from DM to V and vice versa</li>
+  <li>Moving between various screens, e.g. <pre>registration -&gt; registration confirmation -&gt; login -&gt; time-entry</pre></li>
+  <li>Providing user and tag suggestions for autocompletion (then DM should provide help?)</li>
+  <li>Keeping track of selected users/time details, to enable going through the list with Next/Previous buttons</li>
+  <li>Keeping session state</li>
+  <li>Providing the URL namespace:
+    <pre>
+      GET                 timedetails.com/help[#help-topic]
+      GET                 timedetails.com/admin
+      GET|PUT             timedetails.com/users[?name-like=xxx&admin-rights=yes|no]
+      GET|POST|DELETE     timedetails.com/users/&lt;user-id&gt;
+      GET                 timedetails.com/times[?user-name-like=xxx&status=xxx&message-like=xxx&tag=xxx&date=xxx&...]
+      GET                 timedetails.com/times/&lt;time-id&gt;
+      GET                 timedetails.com/users/&lt;user-id&gt;/times
+      GET|PUT|POST|DELETE timedetails.com/users/&lt;user-id&gt;/times/&lt;day-date&gt;
+      </pre></li>
+</ul>
+<p>CLI PM:</p>
+<ol>
+  <li>General CLI: --help, --version, all other commands: &lt;action-verb&gt; &lt;action-options&gt;</li>
+  <li>Login needs to be first command: <br />
+    <code>login --user-name &lt;name&gt; --password &lt;password&gt;</code></li>
+  <li>Logout happens automatically when process stops, but can also be forced: <br />
+    <code>logout</code></li>
+  <li>For admins only:</li>
+  <ol>
+    <li>To add a user: <br />
+      <code>add-user --name=xxx --password=xxx [--give-admin-rights]</code> (returns the id created)</li>
+    <li>To remove a user: <br />
+      <code>remove-user --id=xxx</code></li>
+    <li>To change a user: <br />
+      <code>change-user --id=xxx [--password=xxx] [--give-admin-rights]</code></li>
+    <li>To see (all) users: <br />
+      <code>list-users [--format=csv|xml|txt] [--admin-rights=yes|no] [--name-like=regex]*</code>&nbsp;</li>
+    <li>To change a time detail: <br />
+      <code>change --id=xxx [--status=xxx] [--message=xxx]</code></li>
+    <li>To see (all) time details: <br />
+      <code>list [--format=csv|xml|txt]&nbsp;[--user-id=xxx]*&nbsp;[--user-name=xxx]*&nbsp;[--status=xxx]* [--message-pattern=regex]*&nbsp;[--tag=xxx]*<br />
+      &nbsp; &nbsp; &nbsp;[--date=xxx]* <br />
+      &nbsp; &nbsp; &nbsp;[--start-time=xxx]*&nbsp;[--start-time-before=xxx]*&nbsp;[--start-time-after=xxx]* <br />
+      &nbsp; &nbsp; &nbsp;[--end-time=xxx]* [--end-time-before=xxx]*&nbsp;[--end-time-after=xxx]*&nbsp;</code></li>
+  </ol>
+  <li>For all:</li>
+  <ol>
+    <li>To see see time details of logged in user: <br />
+      <code>list&nbsp;[--format=csv|xml|txt]&nbsp;[--date=xxx]</code> (list each detail with its ID)</li>
+    <li>To remove a time detail: <br />
+      <code>remove &lt;detail-id&gt;</code></li>
+    <li>To add a time detail:&nbsp;<br />
+      <code>add [--date=xxx] &lt;message&gt;</code></li>
+  </ol>
+</ol>
+Noteworthy extra features of this app:
+<ul>
+  <li>Automatically propose the time period since last entry when someone starts typing a message</li>
+  <li>Have a 'fat client' component that takes screenshots every 5 minutes to help remind someone of what they did (leads to additional time-frame panel with vertical screenshot scrolling)</li>
+  <li>Add 'suggestions' to other users' timesheets when mentioned (automatically changing the user's name to the name of the user the suggestion came from)</li>
+  <li>Add 'where:' autocompletion feature</li>
+</ul>
+<h2>MVC</h2>
+<p> One of the most used architectures for dividing an app into parts is MVC: </p>
+<ul>
+  <li><b>M</b>odel: the data and data-model and the business logic dealing and using this data in some needed fashion</li>
+  <li><b>V</b>iew: the pure UI (the presentation) aspects (e.g. WinForms or HTML+CSS+Javascripts or ASP.NET or JSP pages or the command line interpretation or ...)</li>
+  <li><b>C</b>ontroller: the input/command interpreter that determines, based on (user) input, what model actions to invoke and how to link an appropriate view to the resulting model state</li>
+</ul>
+Why separate Model from View?
+<ul>
+  <li>To make it possible to develop/evolve the UI/interface aspects in parallel (separately) from the underlying model: different dev. types/rples are involved</li>
+  <li>To make it possible to have multiple views representing the same model (E.g. web interface + command line interface + Java Swing fat-client interface + ...)</li>
+  <li>To make it possible to develop/evolve the model (primarily data structure + data operations) while not affecting end-users/interfaces</li>
+</ul>
+Why separate Controller from View?
+<ul>
+  <li>To keep pure UI aspects separate from request routing/input interpretation since different dev. types/roles are involved</li>
+</ul>
+Counter-arguments:
+<ul>
+  <li>Controller handling input and View output are really tightly coupled aspects of the UI/UX</li>
+</ul>
+<p> Why separate Controller from Model? </p>
+<ul>
+  <li>To make it possible to develop/evolve the input/request interpretation aspect in parallel from the underlying model (e.g. URI restructuring in web app)</li>
+  <li>To make it possible to have multiple input formats driving the model (e.g. CLI vs web interface)</li>
+</ul>
+References
+</div>
+<ul>
+  <li><a href="http://www.martinfowler.com/eaaDev/uiArchs.html">http://www.martinfowler.com/eaaDev/uiArchs.html</a></li>
+  <li><a href="http://home.arcor.de/fbdiplom/lit_pdf/fea02_thehumbledialogbox.pdf">http://home.arcor.de/fbdiplom/lit_pdf/fea02_thehumbledialogbox.pdf</a></li>
+</ul>
+<h2>Layers</h2>
+<p> Physical layers:</p>
+<ul>
+  <li>Layers reside in separate processes: inter-process comm.</li>
+  <li>Potentially also on different machines: network comm./tiers</li>
+</ul>
+Packaging layers:
+<ul>
+  <li>Separate DLLs/SOs/Assemblies/Jars</li>
+</ul>
+Logical layers:
+<ul>
+  <li>Data Layer</li>
+  <li>Domain/Business Logic Layer</li>
+  <li>Presentation Layer</li>
+</ul>
+<div><a href="http://martinfowler.com/eaaCatalog/ServiceLayerSketch.gif" imageanchor="1"><img border="0" src="http://martinfowler.com/eaaCatalog/ServiceLayerSketch.gif" /></a></div>
+References:
+<ul>
+  <li><a href="http://www.martinfowler.com/eaaDev/SeparatedPresentation.html">http://www.martinfowler.com/eaaDev/SeparatedPresentation.html</a></li>
+  <li><a href="http://martinfowler.com/eaaCatalog/serviceLayer.html">http://martinfowler.com/eaaCatalog/serviceLayer.html</a></li>
+  <li><a href="http://www.martinfowler.com/eaaDev/PassiveScreen.html">http://www.martinfowler.com/eaaDev/PassiveScreen.html</a></li>
+</ul>
+</body>
+</html>

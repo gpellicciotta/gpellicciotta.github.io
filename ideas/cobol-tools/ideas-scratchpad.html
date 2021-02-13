@@ -1,0 +1,93 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Ideas Scratchpad</title>
+</head>
+<body>
+<h1>Ideas Scratchpad</h1>
+<h2>Use Cases</h2>
+<div><br>
+</div>
+<div>1) Count number of debug lines found in a set of COBOL sources:</div>
+<div>
+<div class="sites-codeblock sites-codesnippet-block"><span style="line-height:16px">// 1. Configure a project:<br>
+</span><span style="font-family:monospace;color:rgb(0,96,0)">COBOLProject p = new COBOLProject("sample project");<br>
+p.setFormat(STANDARD_FIXED);<br>
+p.setFlavor(ANSI85);<br>
+p.setSourceDirectories("test-set-1", "test-set-2", "test-set-3");<br>
+p.setCopybookDirectories("test-set-1", "test-set-2", "test-set-3", "test/global-copybooks");<br>
+p.setSourceExtensions("cbl", "cob", "pco", "sqo");<br>
+p.setCopybookExtensions("cpy", "cob");<br>
+<br>
+// 2. Load and tokenize all sources<br>
+p.tokenize();<br>
+<br>
+// 3. Print results<br>
+int debugLines = 0;<br>
+for (COBOLSource s : p.getSources()) {<br>
+&nbsp;&nbsp;debugLines += p.getAttribute(s, TOKENIZER__DEBUG_LINE_COUNT);<br>
+}<br>
+info("Project %s contains %d sources, with a total of %d debug lines", p.getName(), p.getSources().size(), debugLines);</span></div>
+<br>
+2) Analyze all lexical and preprocessing errors found in a set of COBOL sources:</div>
+<div>
+<div class="sites-codeblock sites-codesnippet-block"><code>// 1. Configure project: see Use case 1<br>
+// ...<br>
+// 2. Perform preprocessing<br>
+p.preprocess();<br>
+// 3. Print results<br>
+Set&lt;SourceError&lt;Location&gt;&gt; errors = p.getErrors();<br>
+Error<br>
+<br>
+</code></div>
+<br>
+<br>
+</div>
+<div>Main Types:</div>
+<div><br>
+</div>
+<div>COBOLProject: A description of properties that defines a set of sources and tools to work on these sources. Also a container for the results of applying the various tools on the sources.</div>
+<div><br>
+</div>
+<div>Tree&lt;&gt;SemanticElement</div>
+<div>Tree:</div>
+<div>
+<ul><li>Hierarchical structure</li>
+<li>Untyped: searchable in a generic way</li>
+<li>Low-level info: leafs are tokens</li></ul>
+<div>SemanticElement:</div>
+<div>
+<ul><li>Typed: only searchable with respect to types</li>
+<li>What about construction: allow null values?</li>
+<li>High-level access, no obvious place to put details such as original tokens</li></ul>
+<div><br>
+</div>
+</div>
+Couple the two:</div>
+<div>SemanticElement with following additional properties:</div>
+<div>
+<ul><li>Tokens: list of tokens, in sequence, this semantic element represents (e.g. 'IF', 'a' , '&gt;', 'b', 'THEN', 'DISPLAY', 'a', 'END-IF')</li>
+<li>OwnedTokens: list of tokens that don't also belong to other semantic element's (e.g. 'IF' and 'END-IF' for IfStatement)</li></ul>
+<div><br>
+</div>
+<div>Tokens&lt;&gt;Elements??</div>
+<div><br>
+</div>
+<div><br>
+</div>
+<h2>General Architecture</h2>
+<div><br>
+</div>
+<div><br>
+</div>
+<div><br>
+</div>
+<div><br>
+</div>
+<br>
+<br>
+</div>
+
+</body>
+</html>

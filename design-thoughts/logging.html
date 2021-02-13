@@ -1,0 +1,108 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="../media/style.css" rel="stylesheet" type="text/css" media="all" />
+<title>Logging</title>
+</head>
+<body>
+<h1>Logging</h1>
+<p>Logging is the act of keeping a persistent record about an application's behaviour and state.</p>
+<h2>TOC</h2>
+<ul>
+  <li><a href="#context">Context: Why is it Needed?</a></li>
+  <li><a href="#basic_concepts">Basic Logging Terminology &amp; Concepts</a></li>
+  <li><a href="#design_aspects">Design Aspects</a></li>
+  <li><a href="#references">References</a></li>
+</ul>
+<h2><a name="context" id="context"></a>Context: Why is it Needed?</h2>
+<p>There are many reasons why having information available about an application's behaviour and state is important:</p>
+<ol>
+  <li>To help in diagnosing error situations (by understanding the activities and potentially data that has led to the error: <a href="http://opera.ucsd.edu/paper/log_icse12.pdf">one study</a> has calculated a 2.2x speedup in problem resolution due to the availability of logs)</li>
+  <li>To ensure visibility of activities performed by applications that don't have a more direct UI (E.g. background services/daemons or command line tools)</li>
+  <li>To minimize data loss and enable recovery from severe (fatal) error situations (e.g. see also undo/redo logs as used in DB systems)</li>
+  <li>To analyze long-term usage or behaviour statistics (by keeping long-term track of logs), which itself can be used to improve the software by better understanding it's actual usage and most common problems/errors </li>
+  <li>To ensure accountability by keeping track of which users have instigated which activities</li>
+</ol>
+<p>Software developers in general focus on the first two points above only since it is most directly related to their work.</p>
+<p>This document will initially do the same, and provide more details about tech	niques and APIs to enable the kind of logging that helps in diagnozing error situations.</p>
+<h2><a name="basic_concepts" id="basic_concepts"></a>Basic Logging Terminology &amp; Concepts</h2>
+<h3>Log level</h3>
+<p>Indicates the importance but also the level of detail of the log data.</p>
+<p>Typical log levels used:</p>
+<table width="100%" border="1" cellspacing="0" cellpadding="2">
+  <tr>
+    <td width="21%">Level </td>
+    <td width="79%">Meaning</td>
+  </tr>
+  <tr>
+    <td>TRACE</td>
+    <td>Lowest logging level. Used for tracing activities such as method invocation and parameter logging, etc.</td>
+  </tr>
+  <tr>
+    <td>DEBUG</td>
+    <td>Used to log messages which are helpful in debugging, but which are too verbose to be written to the log under normal situations.</td>
+  </tr>
+  <tr>
+    <td>INFO(rmational)</td>
+    <td>Used to log statements which are expected to be written to the log during the normal operations. For example, running a important business operation should be logged under this level.</td>
+  </tr>
+  <tr>
+    <td>WARN(ing)</td>
+    <td>Used to log warnings, which are situations that are usually unexpected, but which does not significantly affect the business functionality.</td>
+  </tr>
+  <tr>
+    <td>ERROR</td>
+    <td>Used to log all errors and exceptions which affect the business functionality of the application</td>
+  </tr>
+  <tr>
+    <td>FATAL</td>
+    <td>Used to write extreme situations where the entire application execution could be affected due to some cause.</td>
+  </tr>
+</table>
+<p>Personally, I think ERROR and FATAL can be easily combined. Also the names of the DEBUG and TRACE levels could be combined, although in practice it is worthwhile having multiple 'detail' levels, e.g. TRACE-1, TRACE-2, TRACE-3.</p>
+<h2><a name="design_aspects" id="design_aspects"></a>Design Aspects</h2>
+<p>What is it? <br />
+- It is a mechanism to keep track in some repository of events that have occurred.<br />
+<br />
+Why? <br />
+- For auditing purposes: enabling accountability. <br />
+- For debugging/diagnostic purposes: to understand which events have lead to an error situation.<br />
+<br />
+Practical requirements:<br />
+- Multiple output destinations should be supported: file, rolling-files, windows event log, database, ...<br />
+-&gt; Concept of 'output handlers' where a Logger can have multiple handlers attached<br />
+- Exact format of 'log records' persisted from 'log events' should be configurable: text, xml, ...<br />
+-&gt; Concept of OutputFormatters where each handler has exactly one formatter<br />
+- The volume of detail being logged should be configurable<br />
+-&gt; Concept of 'log levels', from debug and/or trace, verbose, info, warning, error to fatal <br />
+-&gt; Typically both attached to the Logger API itself (for performance reasons) and per 'output handler'<br />
+-&gt; Also actual 'filters' are possible which can do more than check a level, e.g. check origin, check date/time, ...<br />
+<br />
+Typical design:<br />
+- The API is a 'logger' class with error, warning, info, ... methods and a configurable log level + set of 'output handlers'<br />
+- The SPI are the output handlers, and per output handler: a 'filter' and a 'formatter'<br />
+<br />
+Design questions:<br />
+- How to handle 'indentation' or 'grouping' of messages, which certainly in textual output formats is desireable? Per threat indent level?<br />
+- How to attach arbitrary data to log events, like stack traces?</p>
+<h2><a name="references" id="references"></a>References</h2>
+<ul>
+  <li><a href="http://www.codeproject.com/Articles/42354/The-Art-of-Logging">The art of logging</a></li>
+  <li><a href="http://opera.ucsd.edu/paper/log_icse12.pdf">Characterizing logging practices in open-source software</a></li>
+  <li><a href="https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying">The Log: What every software engineer should know about real-time data's unifying abstraction</a></li>
+  <li><a href="http://blog.yohanliyanage.com/2010/11/the-dark-art-of-logging/">The dark art of logging</a></li>
+  <li><a href="http://blog.lidalia.org.uk/2010/11/logging-dos-and-donts.html">Logging do's and don't's</a></li>
+</ul>
+<p>Some definitions:</p>
+<ul>
+  <li>Logging is the process of recording application actions and state to a secondary interface</li>
+  <li>Log:  an append-only, totally-ordered sequence of records ordered by time</li>
+  <li>Physical logging means logging the contents of each row that is changed.</li>
+  <li>Logical logging means logging not the changed rows but the SQL commands that lead to the row changes (the insert, update, and delete statements)</li>
+  <li>Adaptive logging  exponentially decreases logging rate when a certain logging  statement is executed many times, only recording its 2  n  dynamic occurrences. Such strategy will reduce both the  amount of logs and performance overhead, while preserving  the first several occurrences of each log message</li>
+</ul>
+<p><img src="https://engineering.linkedin.com/sites/default/files/active_and_passive_arch.png" alt="distributed state replication" /></p>
+<p>&nbsp;</p>
+</body>
+</html>

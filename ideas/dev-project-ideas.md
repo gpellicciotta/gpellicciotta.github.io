@@ -1,6 +1,6 @@
 # Development Project Ideas
 
-## Annotation Glas Pane
+## Annotation Glass Pane
 
 ### What?
 A project that works on desktop and mobile to put up a glass pane in front of whatever is on the screen.

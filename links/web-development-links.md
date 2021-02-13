@@ -1,4 +1,4 @@
-# Web Development
+# Web Development Links
 
 Links to tutorials, articles and libraries related to web (app) development.
 
@@ -32,6 +32,11 @@ Links to tutorials, articles and libraries related to web (app) development.
 - https://unsplash.com
 
 ## SPAs
+- https://codepen.io/bradtraversy/full/OrmKWZ
+- https://www.youtube.com/watch?v=JaMCxVWtW58
 - https://www.smashingmagazine.com/2015/12/reimagining-single-page-applications-progressive-enhancement/
 - https://9elements.com/io/hybrid-javascript-apps/
 
+## QR and other codes
+- https://www.the-qrcode-generator.com/  
+- https://www.mypokecard.com/en/  

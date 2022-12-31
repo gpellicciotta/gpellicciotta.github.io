@@ -66,5 +66,30 @@ Executed 999 diffs with total time: 0:00:02.889 (  2889ms), avg. time:      2ms,
 Executed 999 diffs with total time: 0:00:02.593 (  2593ms), avg. time:      2ms, total-lcs:  92945, total-ses: 827900, algorithm: patience diff with myers linear-space diff
 Executed 999 diffs with total time: 0:00:00.176 (   176ms), avg. time:      0ms, total-lcs:  42443, total-ses: 928904, algorithm: patience diff with histogram diff
 Executed 999 diffs with total time: 0:00:00.109 (   109ms), avg. time:      0ms, total-lcs:  42370, total-ses: 929050, algorithm: histogram diff
+Executed 999 diffs with total time: 0:13:50.124 (830124ms), avg. time:    830ms, total-lcs:  93498, total-ses: 826794, algorithm: myers greedy diff
+Executed 999 diffs with total time: 0:16:30.160 (990160ms), avg. time:    991ms, total-lcs:  93498, total-ses: 826794, algorithm: myers reverse greedy diff
+```
 
+So only the Myers algorithms give a truly minimal LCS and the linear-space version is vastly superior to the others.
+Patience diff also seems to give good results, probably because it falls back on Myers for most of its work (since the sequences are randomly generated and hence might not have many unique elements).
+Histogram diff is blazingly fast and assumed to be optimal for code comparison.
+
+Another comparison, now with short sequences of lengths 0-10 (and hence a much higher chance of there being unique items):
+```
+Executed 999 diffs with total time: 0:00:00.062 (    62ms), avg. time:      0ms, total-lcs:    338, total-ses:   9242, algorithm: myers linear-space diff
+Executed 999 diffs with total time: 0:00:00.041 (    41ms), avg. time:      0ms, total-lcs:    337, total-ses:   9244, algorithm: patience diff with myers linear-space diff
+Executed 999 diffs with total time: 0:00:00.012 (    12ms), avg. time:      0ms, total-lcs:    337, total-ses:   9244, algorithm: patience diff with histogram diff
+Executed 999 diffs with total time: 0:00:00.002 (     2ms), avg. time:      0ms, total-lcs:    337, total-ses:   9244, algorithm: histogram diff
+Executed 999 diffs with total time: 0:00:00.323 (   323ms), avg. time:      0ms, total-lcs:    338, total-ses:   9242, algorithm: myers greedy diff
+Executed 999 diffs with total time: 0:00:00.296 (   296ms), avg. time:      0ms, total-lcs:    338, total-ses:   9242, algorithm: myers reverse greedy diff
+```
+
+Another comparison, now with medium sequences of lengths 0-100:
+```
+Executed 999 diffs with total time: 0:00:00.240 (   240ms), avg. time:      0ms, total-lcs:   8067, total-ses:  86504, algorithm: myers linear-space diff
+Executed 999 diffs with total time: 0:00:00.092 (    92ms), avg. time:      0ms, total-lcs:   6316, total-ses:  90006, algorithm: patience diff with myers linear-space diff
+Executed 999 diffs with total time: 0:00:00.052 (    52ms), avg. time:      0ms, total-lcs:   6276, total-ses:  90086, algorithm: patience diff with histogram diff
+Executed 999 diffs with total time: 0:00:00.027 (    27ms), avg. time:      0ms, total-lcs:   5844, total-ses:  90950, algorithm: histogram diff
+Executed 999 diffs with total time: 0:00:10.013 ( 10013ms), avg. time:     10ms, total-lcs:   8067, total-ses:  86504, algorithm: myers greedy diff
+Executed 999 diffs with total time: 0:00:11.468 ( 11468ms), avg. time:     11ms, total-lcs:   8067, total-ses:  86504, algorithm: myers reverse greedy diff
 ```

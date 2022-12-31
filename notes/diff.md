@@ -21,6 +21,60 @@ The best known (and implemented) algorithms are:
 3. Find all lines which occur exactly once on both sides, then do longest common subsequence on those lines, matching them up.
 4. Do steps 1-2 on each section between matched lines
 
+## Patience Sort Algorithm
+
+Computing the longest increasing subsequence.
+
+The algorithm:
+0. Start with zero piles
+1. Take each number in turn and:
+2. Put it on the left-most pile whose top number is larger than the current number (while also recording the top number of the previous pile)
+3. or start a new pile if needed
+4. Once all numbers are handled: take the top number of the last pile and
+   follow it's back-link, recursively
+5. The list of numbers obtained in this way is the reverse longest common subsequence
+
+
+Why does it work>
+Because it basically is an implementation of a breadth first search.
+
+Example:
+```
+  Seq: 7 1 5 4 8 2 10
+
+                    Breadth-first search:                            Patience sort piles:                                                                                             
+    Round #1:       7                                                7                                                                          
+                                                                                                
+    Round #2:       7                                                7                                          
+                    1                                                1                                          
+                                                                                                    
+    Round #3:       7                                                7    5                                                                    
+                    1 -> 5                                           1                                                          
+                                                                                                    
+    Round #4:       7                                                7    5                                          
+                    1 -> 5                                           1    4                                           
+                    1 -> 4                                                                                          
+                    
+    Round #5:       7 -> 8                                           7    5    8                                               
+                    1 -> 5 -> 8                                      1    4                                                    
+                    1 -> 4 -> 8                                                                                          
+                                                                                                              
+    Round #6:       7 -> 8                                           7    5    8                                               
+                    1 -> 5 -> 8                                      1    4                                                    
+                    1 -> 4 -> 8                                           2                                                             
+                    1 -> 2                                                                                          
+                                                                                                              
+    Round #7:       7 -> 8 -> 10                                     7    5    8   10                                                     
+                    1 -> 5 -> 8 -> 10                                1    4                                                      
+                    1 -> 4 -> 8 -> 10                                     2                                                                  
+                    1 -> 2 -> 10                                                                                          
+```
+
+Some more intuition about the equivalence of both representations: 
+  - Starting a new pile is effectively saying: the current number can 'increase' the longest currently established subsequence
+  - Putting a number on top of a file is saying: this number, when used in place of the old top number, is a better starting point (because lower) for the rest of the subsequence
+
+
 ## References
 
 - [An O(ND) Difference Algorithm and Its Variations by Eugen W. Myers](http://www.xmailserver.org/diff2.pdf)

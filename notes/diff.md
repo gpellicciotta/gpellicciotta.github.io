@@ -14,6 +14,23 @@ The best known (and implemented) algorithms are:
 3. [Patience Diff by Bram Cohen](https://bramcohen.livejournal.com/73318.html)  
    Do a LCS on unique lines, since they are the best predictor of commonality (i.e. same origin)
 
+## Myers Diff Algorithm
+
+1. Do a breadth-first search to find the possible end-points reached (with increasing allowed d=edit distance)
+2. Do this both from the start of both sequences and from the end, to determine (with linear space) the 
+   midpoint (or points if they happen to be match points)
+3. Split the original sequences  in a part before and a part after the midpoint(s)
+4. Repeat steps 1-3 recursively on each part, making sure to take care of the edge case where 1 or both sequences are empty
+   and also (as optimization) ensuring to already discard matching items at start and at end of both sequences
+
+## Histogram Diff Algorithm
+
+1. Find common lines/items between the two sequence and count their occurrences in both sequences
+2. Take common lines/items with lowest occurrence count: take the first occurrence in each sequence and consider
+   this the match pair used to split the original sequences
+3. Split the original sequences in a part before and part after the match pair
+4. Apply steps 1-3 recursively on each part
+
 ## Patience Diff Algorithm
 
 1. Match the first lines of both if they're identical, then match the second, third, etc. until a pair doesn't match.
@@ -98,6 +115,13 @@ Some more intuition about the equivalence of both representations:
 
 See https://github.com/gpellicciotta/hinolugi-support.java, the `com.hinolugi.support.diff` package
 
+From an implementation point of view, the following have proven to be most challenging in implementing Myers diff with linear-space:
+- Turning the 1-based used of x and y indexes into 0-based ones
+- Understanding what to return as 'middle snake': actual implementation seem to differ in what they return 
+  (and hence in how to handle the splitting)
+- Understanding that the algorithm can work also with areas that are empty or half-empty
+
+
 ### Plan
 
 - [x] Implement Myers greedy algorithm in Java
@@ -105,23 +129,23 @@ See https://github.com/gpellicciotta/hinolugi-support.java, the `com.hinolugi.su
 - [x] Implement Histogram diff in Java
 - [x] Implement Patience sort in Java
 - [~] Implement difftool in Java (for files)
-      - With ignore-lines
-      - With selectable algorithm
-      - With unified diff SES output
-      - With JSON diff SES output
-      - With JSON diff LCS output
-      - Streaming with configurable block-size (and sync on longest match sequence in last 15% of block)
+      - [~] With ignore-lines
+      - [x] With selectable algorithm
+      - [x] With unified diff SES output
+      - [x] With JSON diff SES output
+      - [x] With JSON diff LCS output
+      - [x] Streaming with configurable block-size (and sync on longest match sequence in last 15% of block)
 
 
 ### Relative Performance
 Performance results when comparing 999 randomly generated (but reusing the same for each algorithm) character sequences of lengths between 0-1000:
 ```
-Executed 999 diffs with total time: 0:00:02.889 (  2889ms), avg. time:      2ms, total-lcs:  93498, total-ses: 826794, algorithm: myers linear-space diff
-Executed 999 diffs with total time: 0:00:02.593 (  2593ms), avg. time:      2ms, total-lcs:  92945, total-ses: 827900, algorithm: patience diff with myers linear-space diff
-Executed 999 diffs with total time: 0:00:00.176 (   176ms), avg. time:      0ms, total-lcs:  42443, total-ses: 928904, algorithm: patience diff with histogram diff
-Executed 999 diffs with total time: 0:00:00.109 (   109ms), avg. time:      0ms, total-lcs:  42370, total-ses: 929050, algorithm: histogram diff
-Executed 999 diffs with total time: 0:13:50.124 (830124ms), avg. time:    830ms, total-lcs:  93498, total-ses: 826794, algorithm: myers greedy diff
-Executed 999 diffs with total time: 0:16:30.160 (990160ms), avg. time:    991ms, total-lcs:  93498, total-ses: 826794, algorithm: myers reverse greedy diff
+myers linear-space diff                     total time: 0:00:02.889 (  2889ms), avg. time:      2ms, total-lcs:  93498, total-ses: 826794
+patience diff with myers linear-space diff  total time: 0:00:02.593 (  2593ms), avg. time:      2ms, total-lcs:  92945, total-ses: 827900
+patience diff with histogram diff           total time: 0:00:00.176 (   176ms), avg. time:      0ms, total-lcs:  42443, total-ses: 928904
+histogram diff                              total time: 0:00:00.109 (   109ms), avg. time:      0ms, total-lcs:  42370, total-ses: 929050
+myers greedy diff                           total time: 0:13:50.124 (830124ms), avg. time:    830ms, total-lcs:  93498, total-ses: 826794
+myers reverse greedy diff                   total time: 0:16:30.160 (990160ms), avg. time:    991ms, total-lcs:  93498, total-ses: 826794
 ```
 
 So only the Myers algorithms give a truly minimal LCS and the linear-space version is vastly superior to the others.
@@ -130,20 +154,20 @@ Histogram diff is blazingly fast and assumed to be optimal for code comparison.
 
 Another comparison, now with short sequences of lengths 0-10 (and hence a much higher chance of there being unique items):
 ```
-Executed 999 diffs with total time: 0:00:00.062 (    62ms), avg. time:      0ms, total-lcs:    338, total-ses:   9242, algorithm: myers linear-space diff
-Executed 999 diffs with total time: 0:00:00.041 (    41ms), avg. time:      0ms, total-lcs:    337, total-ses:   9244, algorithm: patience diff with myers linear-space diff
-Executed 999 diffs with total time: 0:00:00.012 (    12ms), avg. time:      0ms, total-lcs:    337, total-ses:   9244, algorithm: patience diff with histogram diff
-Executed 999 diffs with total time: 0:00:00.002 (     2ms), avg. time:      0ms, total-lcs:    337, total-ses:   9244, algorithm: histogram diff
-Executed 999 diffs with total time: 0:00:00.323 (   323ms), avg. time:      0ms, total-lcs:    338, total-ses:   9242, algorithm: myers greedy diff
-Executed 999 diffs with total time: 0:00:00.296 (   296ms), avg. time:      0ms, total-lcs:    338, total-ses:   9242, algorithm: myers reverse greedy diff
+myers linear-space diff                     total time: 0:00:00.062 (    62ms), avg. time:      0ms, total-lcs:    338, total-ses:   9242
+patience diff with myers linear-space diff  total time: 0:00:00.041 (    41ms), avg. time:      0ms, total-lcs:    337, total-ses:   9244
+patience diff with histogram diff           total time: 0:00:00.012 (    12ms), avg. time:      0ms, total-lcs:    337, total-ses:   9244
+histogram diff                              total time: 0:00:00.002 (     2ms), avg. time:      0ms, total-lcs:    337, total-ses:   9244
+myers greedy diff                           total time: 0:00:00.323 (   323ms), avg. time:      0ms, total-lcs:    338, total-ses:   9242
+myers reverse greedy diff                   total time: 0:00:00.296 (   296ms), avg. time:      0ms, total-lcs:    338, total-ses:   9242
 ```
 
 Another comparison, now with medium sequences of lengths 0-100:
 ```
-Executed 999 diffs with total time: 0:00:00.240 (   240ms), avg. time:      0ms, total-lcs:   8067, total-ses:  86504, algorithm: myers linear-space diff
-Executed 999 diffs with total time: 0:00:00.092 (    92ms), avg. time:      0ms, total-lcs:   6316, total-ses:  90006, algorithm: patience diff with myers linear-space diff
-Executed 999 diffs with total time: 0:00:00.052 (    52ms), avg. time:      0ms, total-lcs:   6276, total-ses:  90086, algorithm: patience diff with histogram diff
-Executed 999 diffs with total time: 0:00:00.027 (    27ms), avg. time:      0ms, total-lcs:   5844, total-ses:  90950, algorithm: histogram diff
-Executed 999 diffs with total time: 0:00:10.013 ( 10013ms), avg. time:     10ms, total-lcs:   8067, total-ses:  86504, algorithm: myers greedy diff
-Executed 999 diffs with total time: 0:00:11.468 ( 11468ms), avg. time:     11ms, total-lcs:   8067, total-ses:  86504, algorithm: myers reverse greedy diff
+myers linear-space diff                     total time: 0:00:00.240 (   240ms), avg. time:      0ms, total-lcs:   8067, total-ses:  86504
+patience diff with myers linear-space diff  total time: 0:00:00.092 (    92ms), avg. time:      0ms, total-lcs:   6316, total-ses:  90006
+patience diff with histogram diff           total time: 0:00:00.052 (    52ms), avg. time:      0ms, total-lcs:   6276, total-ses:  90086
+histogram diff                              total time: 0:00:00.027 (    27ms), avg. time:      0ms, total-lcs:   5844, total-ses:  90950
+myers greedy diff                           total time: 0:00:10.013 ( 10013ms), avg. time:     10ms, total-lcs:   8067, total-ses:  86504
+myers reverse greedy diff                   total time: 0:00:11.468 ( 11468ms), avg. time:     11ms, total-lcs:   8067, total-ses:  86504
 ```

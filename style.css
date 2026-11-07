@@ -225,7 +225,9 @@ main {
 }
 
 .hex-tile:hover .hex-shape-path,
-.hex-tile:focus-visible .hex-shape-path {
+.hex-tile:focus-visible .hex-shape-path,
+.hex-tile:hover .meteo-cloud,
+.hex-tile:focus-visible .meteo-cloud {
   fill: var(--hex-hover-fill);
 }
 

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#1e40af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Sun behind cloud -->
+  <path d="M12 2v2"/>
+  <path d="M4.93 4.93l1.41 1.41"/>
+  <path d="M2 12h2"/>
+  <path d="M6.34 17.66l-1.41 1.41"/>
+  <path d="M8.5 8.5a4 4 0 0 1 5.4 0"/>
+  <!-- Cloud in front -->
+  <path d="M17.5 17H9a5 5 0 0 1-1-9.9 6.5 6.5 0 0 1 10.7-1.1A4.5 4.5 0 0 1 17.5 17Z" fill="var(--hex-fill, #ffffff)"/>
+  <path d="M17.5 17H9a5 5 0 0 1-1-9.9 6.5 6.5 0 0 1 10.7-1.1A4.5 4.5 0 0 1 17.5 17Z"/>
+  <!-- Raindrops -->
+  <line x1="8" y1="20" x2="7" y2="23"/>
+  <line x1="12" y1="20" x2="11" y2="23"/>
+  <line x1="16" y1="20" x2="15" y2="23"/>
+</svg>

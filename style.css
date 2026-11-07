@@ -8,6 +8,7 @@
   --text-muted: #94a3b8;
   --hex-fill: #1e293b;
   --hex-border: #1e40af;
+  --hex-stroke-width: 2.72;
   --hex-hover-fill: #334155;
   --accent: #38bdf8;
   --accent-glow: rgba(30, 64, 175, 0.45);
@@ -66,12 +67,14 @@ body {
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
   cursor: pointer;
   outline: none;
+  z-index: 10;
 }
 
 .profile-link:hover,
 .profile-link:focus-visible {
   transform: translateY(-6px) scale(1.02);
   filter: drop-shadow(0 14px 28px var(--accent-glow));
+  z-index: 100;
 }
 
 .profile-svg-bg {
@@ -85,7 +88,7 @@ body {
 .profile-svg-bg path {
   fill: var(--hex-fill);
   stroke: var(--hex-border);
-  stroke-width: 3.4;
+  stroke-width: var(--hex-stroke-width);
   stroke-linejoin: round;
   transition: fill 0.3s ease, stroke 0.3s ease;
 }
@@ -95,6 +98,7 @@ body {
   fill: var(--hex-hover-fill);
 }
 
+/* Text bounded strictly inside the hexagon */
 .profile-content {
   position: absolute;
   inset: 0;
@@ -104,14 +108,16 @@ body {
   justify-content: center;
   padding: 2.2rem 1.6rem;
   text-align: center;
-  z-index: 1;
+  z-index: 2;
+  box-sizing: border-box;
 }
 
 .avatar-wrapper {
   position: relative;
-  width: 76px;
-  height: 76px;
-  margin-bottom: 0.65rem;
+  width: 74px;
+  height: 74px;
+  margin-bottom: 0.6rem;
+  flex-shrink: 0;
 }
 
 .avatar-img {
@@ -119,22 +125,26 @@ body {
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid var(--hex-border);
+  border: 2.5px solid var(--hex-border);
   box-shadow: 0 4px 12px var(--accent-glow);
 }
 
 .profile-name {
-  font-size: 1.15rem;
+  font-size: 1.12rem;
   font-weight: 700;
   letter-spacing: -0.01em;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.3rem;
   color: var(--text-main);
+  max-width: 180px;
+  overflow-wrap: break-word;
 }
 
 .profile-bio {
-  font-size: 0.83rem;
+  font-size: 0.82rem;
   line-height: 1.35;
   color: var(--text-muted);
+  max-width: 175px;
+  overflow-wrap: break-word;
 }
 
 /* Center Honeycomb App Grid */
@@ -153,7 +163,7 @@ main {
   position: relative;
 }
 
-/* Tight gap between hexagons (10px) */
+/* Halved gap between hexagons (10px) */
 .honeycomb-row {
   display: flex;
   justify-content: center;
@@ -167,7 +177,7 @@ main {
   margin-top: -50px;
 }
 
-/* When a row or card is hovered/focused, elevate stacking context */
+/* Hoist hovered row above neighboring rows */
 .honeycomb-row:has(.hex-tile:hover),
 .honeycomb-row:has(.hex-tile:focus-visible) {
   z-index: 50;
@@ -206,7 +216,7 @@ main {
 .hex-shape-path {
   fill: var(--hex-fill);
   stroke: var(--hex-border);
-  stroke-width: 3.4;
+  stroke-width: var(--hex-stroke-width);
   stroke-linejoin: round;
   transition: fill 0.3s ease, stroke 0.3s ease;
 }
@@ -216,6 +226,7 @@ main {
   fill: var(--hex-hover-fill);
 }
 
+/* Text bounded strictly inside the hexagon */
 .hex-card-inner {
   position: absolute;
   inset: 0;
@@ -223,34 +234,46 @@ main {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 1.4rem;
+  padding: 1.8rem 1.2rem;
   text-align: center;
   z-index: 2;
+  box-sizing: border-box;
 }
 
 .hex-icon {
-  width: 46px;
-  height: 46px;
+  width: 44px;
+  height: 44px;
   margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--hex-border);
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  flex-shrink: 0;
+}
+
+.hex-icon svg {
+  width: 100%;
+  height: 100%;
 }
 
 .hex-tile:hover .hex-icon,
 .hex-tile:focus-visible .hex-icon {
-  transform: scale(1.18);
+  transform: scale(1.15);
 }
 
 .hex-title {
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--text-main);
+  max-width: 135px;
+  line-height: 1.25;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
-/* Tooltip Always Highest in Z-Order */
+/* Shared, Consistent Tooltip System (Always Highest in Z-Order) */
 .hex-tooltip {
   position: absolute;
   bottom: -12px;
@@ -274,7 +297,9 @@ main {
 }
 
 .hex-tile:hover .hex-tooltip,
-.hex-tile:focus-visible .hex-tooltip {
+.hex-tile:focus-visible .hex-tooltip,
+.profile-link:hover .hex-tooltip,
+.profile-link:focus-visible .hex-tooltip {
   opacity: 1;
   visibility: visible;
   transform: translateX(-50%) translateY(0);

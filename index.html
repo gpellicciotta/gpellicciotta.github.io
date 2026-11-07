@@ -5,318 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Giovanni Pellicciotta | Apps</title>
   <meta name="description" content="Personal applications and utilities by Giovanni Pellicciotta.">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><polygon points='50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5' fill='%236366f1'/></svg>">
-  <style>
-    :root {
-      color-scheme: light dark;
-      --font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      --bg-gradient: radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.12) 0%, transparent 40%),
-                     radial-gradient(circle at 85% 85%, rgba(14, 165, 233, 0.1) 0%, transparent 45%),
-                     #0f172a;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --hex-fill: rgba(30, 41, 59, 0.75);
-      --hex-stroke: rgba(148, 163, 184, 0.25);
-      --hex-hover-fill: rgba(30, 41, 59, 0.95);
-      --accent: #38bdf8;
-      --accent-glow: rgba(56, 189, 248, 0.35);
-      --tooltip-bg: rgba(15, 23, 42, 0.95);
-      --tooltip-border: rgba(148, 163, 184, 0.3);
-      --shadow-drop: 0 12px 30px -8px rgba(0, 0, 0, 0.5);
-    }
-
-    @media (prefers-color-scheme: light) {
-      :root {
-        --bg-gradient: radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
-                       radial-gradient(circle at 85% 85%, rgba(14, 165, 233, 0.08) 0%, transparent 45%),
-                       #f8fafc;
-        --text-main: #0f172a;
-        --text-muted: #64748b;
-        --hex-fill: rgba(255, 255, 255, 0.85);
-        --hex-stroke: rgba(203, 213, 225, 0.8);
-        --hex-hover-fill: #ffffff;
-        --accent: #2563eb;
-        --accent-glow: rgba(37, 99, 235, 0.25);
-        --tooltip-bg: rgba(255, 255, 255, 0.98);
-        --tooltip-border: rgba(203, 213, 225, 0.8);
-        --shadow-drop: 0 12px 28px -6px rgba(0, 0, 0, 0.12);
-      }
-    }
-
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: var(--font-family);
-      background: var(--bg-gradient);
-      background-attachment: fixed;
-      color: var(--text-main);
-      min-block-size: 100vh;
-      min-block-size: 100dvh;
-      display: grid;
-      grid-template-rows: auto 1fr;
-      padding: 1.5rem;
-      overflow-x: hidden;
-    }
-
-    /* Top Left Profile Hexagon */
-    .profile-container {
-      width: 280px;
-      height: 320px;
-      position: relative;
-      margin-bottom: 2rem;
-      filter: drop-shadow(var(--shadow-drop));
-      transition: transform 0.3s ease;
-    }
-
-    .profile-container:hover {
-      transform: translateY(-4px);
-    }
-
-    .profile-svg-bg {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-    }
-
-    .profile-svg-bg path {
-      fill: var(--hex-fill);
-      stroke: var(--hex-stroke);
-      stroke-width: 2.5;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      transition: stroke 0.3s ease, fill 0.3s ease;
-    }
-
-    .profile-container:hover .profile-svg-bg path {
-      stroke: var(--accent);
-    }
-
-    .profile-content {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 2.5rem 1.8rem;
-      text-align: center;
-      z-index: 1;
-    }
-
-    .avatar-wrapper {
-      position: relative;
-      width: 82px;
-      height: 82px;
-      margin-bottom: 0.75rem;
-    }
-
-    .avatar-img {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 3px solid var(--accent);
-      box-shadow: 0 4px 14px var(--accent-glow);
-    }
-
-    .profile-name {
-      font-size: 1.15rem;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      margin-bottom: 0.4rem;
-      color: var(--text-main);
-    }
-
-    .profile-bio {
-      font-size: 0.85rem;
-      line-height: 1.4;
-      color: var(--text-muted);
-    }
-
-    /* Honeycomb App Grid */
-    main {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 1rem 0 3rem;
-    }
-
-    .honeycomb-section {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      position: relative;
-    }
-
-    .honeycomb-row {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-    }
-
-    /* Stagger second row upward to nestle into the pointy top valleys */
-    .honeycomb-row + .honeycomb-row {
-      margin-top: -38px;
-    }
-
-    /* Hexagon App Card */
-    .hex-tile {
-      display: block;
-      width: 210px;
-      height: 240px;
-      position: relative;
-      text-decoration: none;
-      color: inherit;
-      filter: drop-shadow(var(--shadow-drop));
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
-      cursor: pointer;
-      outline: none;
-    }
-
-    .hex-tile:focus-visible {
-      transform: translateY(-8px) scale(1.04);
-      filter: drop-shadow(0 14px 28px var(--accent-glow));
-    }
-
-    .hex-tile:hover {
-      transform: translateY(-8px) scale(1.04);
-      filter: drop-shadow(0 14px 28px var(--accent-glow));
-    }
-
-    .hex-svg {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-    }
-
-    .hex-svg path {
-      fill: var(--hex-fill);
-      stroke: var(--hex-stroke);
-      stroke-width: 2;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      transition: fill 0.3s ease, stroke 0.3s ease, stroke-width 0.3s ease;
-    }
-
-    .hex-tile:hover .hex-svg path,
-    .hex-tile:focus-visible .hex-svg path {
-      fill: var(--hex-hover-fill);
-      stroke: var(--accent);
-      stroke-width: 2.5;
-    }
-
-    .hex-card-inner {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 1.5rem;
-      text-align: center;
-      z-index: 1;
-    }
-
-    .hex-icon {
-      width: 44px;
-      height: 44px;
-      margin-bottom: 0.6rem;
-      color: var(--accent);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: transform 0.3s ease;
-    }
-
-    .hex-tile:hover .hex-icon,
-    .hex-tile:focus-visible .hex-icon {
-      transform: scale(1.15);
-    }
-
-    .hex-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      margin-bottom: 0.25rem;
-      color: var(--text-main);
-    }
-
-    /* On-hover / focus Tooltip Badge */
-    .hex-tooltip {
-      position: absolute;
-      bottom: -10px;
-      left: 50%;
-      transform: translateX(-50%) translateY(10px);
-      background: var(--tooltip-bg);
-      border: 1px solid var(--tooltip-border);
-      color: var(--text-main);
-      padding: 0.55rem 0.9rem;
-      border-radius: 8px;
-      font-size: 0.78rem;
-      line-height: 1.35;
-      width: 220px;
-      text-align: center;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-      transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
-      z-index: 20;
-    }
-
-    .hex-tile:hover .hex-tooltip,
-    .hex-tile:focus-visible .hex-tooltip {
-      opacity: 1;
-      visibility: visible;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    /* Responsive Adaptation */
-    @media (max-width: 680px) {
-      body {
-        padding: 1rem;
-      }
-
-      .profile-container {
-        margin: 0 auto 2rem;
-      }
-
-      .honeycomb-row {
-        flex-direction: column;
-        gap: 15px;
-      }
-
-      .honeycomb-row + .honeycomb-row {
-        margin-top: 15px;
-      }
-    }
-  </style>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path transform='matrix(1.2345 0 0 1.1905 -3.3404 -2.6996)' fill='%23ffffff' stroke='%231e40af' stroke-width='3.4' stroke-linejoin='round' d='m15.816 3.5634c-1.6261 0-9.6096 4.6431-10.418 6.0603-.80845 1.4172-.80845 10.703 0 12.121.80845 1.4172 8.7919 6.0603 10.418 6.0603 1.6169 0 9.6004-4.6431 10.418-6.0603.80845-1.4172.80845-10.713 0-12.121C25.407 8.2065 17.433 3.5634 15.816 3.5634Z'/></svg>">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- Top-Left Profile Hexagon -->
+  <!-- Top-Left Profile Hexagon linking to GitHub profile -->
   <header>
-    <div class="profile-container" aria-label="Profile Card">
-      <svg class="profile-svg-bg" viewBox="0 0 310 350" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M 295.00 231.00 Q 295.00 255.00 274.16 266.91 L 175.84 323.09 Q 155.00 335.00 134.16 323.09 L 35.84 266.91 Q 15.00 255.00 15.00 231.00 L 15.00 119.00 Q 15.00 95.00 35.84 83.09 L 134.16 26.91 Q 155.00 15.00 175.84 26.91 L 274.16 83.09 Q 295.00 95.00 295.00 119.00 Z" />
+    <a href="https://github.com/gpellicciotta" target="_blank" rel="noopener noreferrer" class="profile-link" aria-label="Giovanni Pellicciotta GitHub Profile" title="View GitHub profile">
+      <svg class="profile-svg-bg" viewBox="0 0 32 32" aria-hidden="true">
+        <g transform="translate(16 16) scale(.93) translate(-16.2 -16.6)">
+          <path transform="matrix(1.2345 0 0 1.1905 -3.3404 -2.6996)" fill="var(--hex-fill)" stroke="var(--hex-border)" stroke-width="3.4" stroke-linejoin="round" d="m15.816 3.5634c-1.6261 0-9.6096 4.6431-10.418 6.0603-.80845 1.4172-.80845 10.703 0 12.121.80845 1.4172 8.7919 6.0603 10.418 6.0603 1.6169 0 9.6004-4.6431 10.418-6.0603.80845-1.4172.80845-10.713 0-12.121C25.407 8.2065 17.433 3.5634 15.816 3.5634Z"/>
+        </g>
       </svg>
       <div class="profile-content">
         <div class="avatar-wrapper">
-          <img src="https://avatars.githubusercontent.com/u/46821356?v=4" alt="Giovanni Pellicciotta" class="avatar-img" width="82" height="82" loading="eager">
+          <img src="https://avatars.githubusercontent.com/u/46821356?v=4" alt="Giovanni Pellicciotta" class="avatar-img" width="76" height="76" loading="eager">
         </div>
         <h1 class="profile-name">Giovanni Pellicciotta</h1>
         <p class="profile-bio">Building stuff while trying to keep things as simple as possible.</p>
       </div>
-    </div>
+    </a>
   </header>
 
   <!-- Honeycomb Grid in Triangular Configuration -->
@@ -328,14 +37,26 @@
         
         <!-- Meteo App -->
         <a href="https://apps.pellicciotta.com/meteo" class="hex-tile" title="A simple app to check the weather and rain-faill in the next 12 hours">
-          <svg class="hex-svg" viewBox="0 0 220 250" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M 210.00 166.50 Q 210.00 182.50 196.13 190.48 L 123.87 232.02 Q 110.00 240.00 96.13 232.02 L 23.87 190.48 Q 10.00 182.50 10.00 166.50 L 10.00 83.50 Q 10.00 67.50 23.87 59.52 L 96.13 17.98 Q 110.00 10.00 123.87 17.98 L 196.13 59.52 Q 210.00 67.50 210.00 83.50 Z" />
+          <svg class="hex-svg" viewBox="0 0 32 32" aria-hidden="true">
+            <g transform="translate(16 16) scale(.93) translate(-16.2 -16.6)">
+              <path class="hex-shape-path" transform="matrix(1.2345 0 0 1.1905 -3.3404 -2.6996)" fill="var(--hex-fill)" stroke="var(--hex-border)" stroke-width="3.4" stroke-linejoin="round" d="m15.816 3.5634c-1.6261 0-9.6096 4.6431-10.418 6.0603-.80845 1.4172-.80845 10.703 0 12.121.80845 1.4172 8.7919 6.0603 10.418 6.0603 1.6169 0 9.6004-4.6431 10.418-6.0603.80845-1.4172.80845-10.713 0-12.121C25.407 8.2065 17.433 3.5634 15.816 3.5634Z"/>
+            </g>
           </svg>
           <div class="hex-card-inner">
             <div class="hex-icon">
-              <!-- Sun / Cloud Weather Icon -->
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path>
+              <!-- Sun behind cloud with rain coming out -->
+              <svg width="44" height="44" viewBox="0 0 48 48" aria-hidden="true">
+                <!-- Sun behind top-left -->
+                <circle cx="19" cy="17" r="6.5" fill="#fbbf24" stroke="#f59e0b" stroke-width="1.5"/>
+                <path d="M19 6v3 M19 25v2 M8 17H5 M30 17h3 M10.5 8.5l2.2 2.2 M25.3 23.3l2.2 2.2 M10.5 25.5l2.2-2.2 M25.3 10.7l2.2-2.2" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+                <!-- Cloud in front -->
+                <path d="M15 31h18a6.5 6.5 0 0 0 2.2-12.6A8.5 8.5 0 0 0 19 12a7.5 7.5 0 0 0-7 9.5A6 6 0 0 0 15 31z" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5" stroke-linejoin="round"/>
+                <!-- Rain falling -->
+                <g stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round">
+                  <line x1="16" y1="35" x2="13.5" y2="41"/>
+                  <line x1="23" y1="35" x2="20.5" y2="41"/>
+                  <line x1="30" y1="35" x2="27.5" y2="41"/>
+                </g>
               </svg>
             </div>
             <h2 class="hex-title">Meteo</h2>
@@ -345,15 +66,16 @@
 
         <!-- Todos App -->
         <a href="https://apps.pellicciotta.com/todos.webapp" class="hex-tile" title="A task tracker that can work 100% offline, or connected">
-          <svg class="hex-svg" viewBox="0 0 220 250" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M 210.00 166.50 Q 210.00 182.50 196.13 190.48 L 123.87 232.02 Q 110.00 240.00 96.13 232.02 L 23.87 190.48 Q 10.00 182.50 10.00 166.50 L 10.00 83.50 Q 10.00 67.50 23.87 59.52 L 96.13 17.98 Q 110.00 10.00 123.87 17.98 L 196.13 59.52 Q 210.00 67.50 210.00 83.50 Z" />
+          <svg class="hex-svg" viewBox="0 0 32 32" aria-hidden="true">
+            <g transform="translate(16 16) scale(.93) translate(-16.2 -16.6)">
+              <path class="hex-shape-path" transform="matrix(1.2345 0 0 1.1905 -3.3404 -2.6996)" fill="var(--hex-fill)" stroke="var(--hex-border)" stroke-width="3.4" stroke-linejoin="round" d="m15.816 3.5634c-1.6261 0-9.6096 4.6431-10.418 6.0603-.80845 1.4172-.80845 10.703 0 12.121.80845 1.4172 8.7919 6.0603 10.418 6.0603 1.6169 0 9.6004-4.6431 10.418-6.0603.80845-1.4172.80845-10.713 0-12.121C25.407 8.2065 17.433 3.5634 15.816 3.5634Z"/>
+            </g>
           </svg>
           <div class="hex-card-inner">
             <div class="hex-icon">
-              <!-- Check-Square Task Icon -->
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="m9 11 3 3L22 4"></path>
-                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+              <!-- Exact checkmark icon from todos.webapp app-icon.svg -->
+              <svg width="44" height="44" viewBox="0 0 32 32" aria-hidden="true">
+                <path d="m10.2 17 4.2 4.2 7.8-9" fill="none" stroke="#1e40af" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </div>
             <h2 class="hex-title">Todos</h2>
@@ -363,23 +85,26 @@
 
       </div>
 
-      <!-- Row 2: Verkeersregels Quiz (centered under Row 1, forming the triangle) -->
-      <!-- To extend the grid with more apps: add more hex-tile elements to this row or add a new honeycomb-row! -->
+      <!-- Row 2: Verkeersregels Quiz (centered below Row 1, forming the triangle) -->
+      <!-- To extend the grid: add more hex-tile elements to this row, or add another honeycomb-row! -->
       <div class="honeycomb-row">
         
         <!-- Verkeersregels Quiz App -->
         <a href="https://apps.pellicciotta.com/verkeersregels-quiz" class="hex-tile" title="A quiz for learning about belgian traffic rules, available in Dutch, French, English and Italian">
-          <svg class="hex-svg" viewBox="0 0 220 250" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M 210.00 166.50 Q 210.00 182.50 196.13 190.48 L 123.87 232.02 Q 110.00 240.00 96.13 232.02 L 23.87 190.48 Q 10.00 182.50 10.00 166.50 L 10.00 83.50 Q 10.00 67.50 23.87 59.52 L 96.13 17.98 Q 110.00 10.00 123.87 17.98 L 196.13 59.52 Q 210.00 67.50 210.00 83.50 Z" />
+          <svg class="hex-svg" viewBox="0 0 32 32" aria-hidden="true">
+            <g transform="translate(16 16) scale(.93) translate(-16.2 -16.6)">
+              <path class="hex-shape-path" transform="matrix(1.2345 0 0 1.1905 -3.3404 -2.6996)" fill="var(--hex-fill)" stroke="var(--hex-border)" stroke-width="3.4" stroke-linejoin="round" d="m15.816 3.5634c-1.6261 0-9.6096 4.6431-10.418 6.0603-.80845 1.4172-.80845 10.703 0 12.121.80845 1.4172 8.7919 6.0603 10.418 6.0603 1.6169 0 9.6004-4.6431 10.418-6.0603.80845-1.4172.80845-10.713 0-12.121C25.407 8.2065 17.433 3.5634 15.816 3.5634Z"/>
+            </g>
           </svg>
           <div class="hex-card-inner">
             <div class="hex-icon">
-              <!-- Traffic Light / Quiz Icon -->
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect width="10" height="18" x="7" y="2" rx="3"></rect>
-                <circle cx="12" cy="7" r="1.5" fill="currentColor"></circle>
-                <circle cx="12" cy="12" r="1.5" fill="currentColor"></circle>
-                <circle cx="12" cy="17" r="1.5" fill="currentColor"></circle>
+              <!-- Traffic sign that means circle around (roundabout sign D1) -->
+              <svg width="44" height="44" viewBox="0 0 78.259 78.164" aria-hidden="true">
+                <circle cx="39.13" cy="39.08" r="37" fill="#0071B3"/>
+                <circle cx="39.13" cy="39.08" r="35.5" fill="none" stroke="#FFFFFF" stroke-width="1.8"/>
+                <path fill="#FFFFFF" d="M15.601,43.897l-4.891,0.918l7.978,6.587l6.572-9.323l-5.945,1.115c-0.245-1.237-0.367-2.506-0.367-3.82c0-8.941,5.762-16.522,13.756-19.274l-1.529-3.591c-9.399,3.332-16.124,12.319-16.124,22.865c0,1.527,0.137,3.011,0.412,4.463L15.601,43.897z"/>
+                <path fill="#FFFFFF" d="M63.104,43.806l-3.806-0.886c0.198-1.147,0.306-2.323,0.306-3.53c0-8.82-5.594-16.324-13.435-19.167l-1.927,5.38l-4.569-10.439l9.828-4.234l-2.003,5.579c9.354,3.362,16.049,12.334,16.049,22.85c0,1.514-0.139,2.98-0.396,4.418L63.104,43.806z"/>
+                <path fill="#FFFFFF" d="M55.568,57.822l3.424,3.865l1.498-10.087l-11.371-1.039l3.606,4.065c-3.592,3.164-8.299,5.075-13.45,5.075c-4.952,0-9.476-1.758-13.007-4.693l-2.415,3.072c4.203,3.438,9.568,5.518,15.422,5.518c6.159,0,11.784-2.293,16.063-6.083L55.568,57.822z"/>
               </svg>
             </div>
             <h2 class="hex-title">Verkeersregels Quiz</h2>

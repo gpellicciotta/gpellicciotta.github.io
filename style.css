@@ -1,0 +1,301 @@
+:root {
+  color-scheme: light dark;
+  --font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  --bg-gradient: radial-gradient(circle at 15% 15%, rgba(30, 64, 175, 0.15) 0%, transparent 45%),
+                 radial-gradient(circle at 85% 85%, rgba(30, 64, 175, 0.1) 0%, transparent 50%),
+                 #0f172a;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --hex-fill: #1e293b;
+  --hex-border: #1e40af;
+  --hex-hover-fill: #334155;
+  --accent: #38bdf8;
+  --accent-glow: rgba(30, 64, 175, 0.45);
+  --tooltip-bg: rgba(15, 23, 42, 0.96);
+  --tooltip-border: #1e40af;
+  --shadow-drop: 0 10px 24px -6px rgba(0, 0, 0, 0.5);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-gradient: radial-gradient(circle at 15% 15%, rgba(30, 64, 175, 0.08) 0%, transparent 45%),
+                   radial-gradient(circle at 85% 85%, rgba(30, 64, 175, 0.06) 0%, transparent 50%),
+                   #f8fafc;
+    --text-main: #0f172a;
+    --text-muted: #475569;
+    --hex-fill: #ffffff;
+    --hex-border: #1e40af;
+    --hex-hover-fill: #f1f5f9;
+    --accent: #1e40af;
+    --accent-glow: rgba(30, 64, 175, 0.25);
+    --tooltip-bg: rgba(255, 255, 255, 0.98);
+    --tooltip-border: #1e40af;
+    --shadow-drop: 0 10px 24px -6px rgba(15, 23, 42, 0.15);
+  }
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background: var(--bg-gradient);
+  background-attachment: fixed;
+  color: var(--text-main);
+  min-block-size: 100vh;
+  min-block-size: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: 1.5rem;
+  overflow-x: hidden;
+}
+
+/* Top Left Profile Hexagon Link */
+.profile-link {
+  display: block;
+  width: 270px;
+  height: 290px;
+  position: relative;
+  text-decoration: none;
+  color: inherit;
+  margin-bottom: 2rem;
+  filter: drop-shadow(var(--shadow-drop));
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
+  cursor: pointer;
+  outline: none;
+}
+
+.profile-link:hover,
+.profile-link:focus-visible {
+  transform: translateY(-6px) scale(1.02);
+  filter: drop-shadow(0 14px 28px var(--accent-glow));
+}
+
+.profile-svg-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.profile-svg-bg path {
+  fill: var(--hex-fill);
+  stroke: var(--hex-border);
+  stroke-width: 3.4;
+  stroke-linejoin: round;
+  transition: fill 0.3s ease, stroke 0.3s ease;
+}
+
+.profile-link:hover .profile-svg-bg path,
+.profile-link:focus-visible .profile-svg-bg path {
+  fill: var(--hex-hover-fill);
+}
+
+.profile-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.2rem 1.6rem;
+  text-align: center;
+  z-index: 1;
+}
+
+.avatar-wrapper {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  margin-bottom: 0.65rem;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--hex-border);
+  box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+.profile-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 0.35rem;
+  color: var(--text-main);
+}
+
+.profile-bio {
+  font-size: 0.83rem;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+/* Center Honeycomb App Grid */
+main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0 3rem;
+}
+
+.honeycomb-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+/* Tight gap between hexagons (10px) */
+.honeycomb-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Nest row into upper valleys */
+.honeycomb-row + .honeycomb-row {
+  margin-top: -50px;
+}
+
+/* When a row or card is hovered/focused, elevate stacking context */
+.honeycomb-row:has(.hex-tile:hover),
+.honeycomb-row:has(.hex-tile:focus-visible) {
+  z-index: 50;
+}
+
+/* Hexagon App Card */
+.hex-tile {
+  display: block;
+  width: 210px;
+  height: 230px;
+  position: relative;
+  text-decoration: none;
+  color: inherit;
+  filter: drop-shadow(var(--shadow-drop));
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
+  cursor: pointer;
+  outline: none;
+  z-index: 1;
+}
+
+.hex-tile:hover,
+.hex-tile:focus-visible {
+  transform: translateY(-8px) scale(1.04);
+  filter: drop-shadow(0 16px 30px var(--accent-glow));
+  z-index: 100;
+}
+
+.hex-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.hex-shape-path {
+  fill: var(--hex-fill);
+  stroke: var(--hex-border);
+  stroke-width: 3.4;
+  stroke-linejoin: round;
+  transition: fill 0.3s ease, stroke 0.3s ease;
+}
+
+.hex-tile:hover .hex-shape-path,
+.hex-tile:focus-visible .hex-shape-path {
+  fill: var(--hex-hover-fill);
+}
+
+.hex-card-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.4rem;
+  text-align: center;
+  z-index: 2;
+}
+
+.hex-icon {
+  width: 46px;
+  height: 46px;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.hex-tile:hover .hex-icon,
+.hex-tile:focus-visible .hex-icon {
+  transform: scale(1.18);
+}
+
+.hex-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-main);
+}
+
+/* Tooltip Always Highest in Z-Order */
+.hex-tooltip {
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: var(--tooltip-bg);
+  border: 2px solid var(--tooltip-border);
+  color: var(--text-main);
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  width: 230px;
+  text-align: center;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+  z-index: 200;
+}
+
+.hex-tile:hover .hex-tooltip,
+.hex-tile:focus-visible .hex-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Responsive adjustments */
+@media (max-width: 680px) {
+  body {
+    padding: 1rem;
+  }
+
+  .profile-link {
+    margin: 0 auto 2rem;
+  }
+
+  .honeycomb-row {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .honeycomb-row + .honeycomb-row {
+    margin-top: 15px;
+  }
+}

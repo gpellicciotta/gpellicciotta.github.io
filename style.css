@@ -8,7 +8,8 @@
   --text-muted: #94a3b8;
   --hex-fill: #1e293b;
   --hex-border: #1e40af;
-  --hex-stroke-width: 2.72;
+  /* With paint-order: stroke fill, only the outer 50% is visible outside the path */
+  --hex-stroke-width: 3.8;
   --hex-hover-fill: #334155;
   --accent: #38bdf8;
   --accent-glow: rgba(30, 64, 175, 0.45);
@@ -57,12 +58,12 @@ body {
 /* Top Left Profile Hexagon Link */
 .profile-link {
   display: block;
-  width: 270px;
-  height: 290px;
+  width: 330px;
+  height: 356px;
   position: relative;
   text-decoration: none;
   color: inherit;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   filter: drop-shadow(var(--shadow-drop));
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
   cursor: pointer;
@@ -90,6 +91,7 @@ body {
   stroke: var(--hex-border);
   stroke-width: var(--hex-stroke-width);
   stroke-linejoin: round;
+  paint-order: stroke fill;
   transition: fill 0.3s ease, stroke 0.3s ease;
 }
 
@@ -98,7 +100,7 @@ body {
   fill: var(--hex-hover-fill);
 }
 
-/* Text bounded strictly inside the hexagon */
+/* Text bounded with generous internal padding inside the hexagon */
 .profile-content {
   position: absolute;
   inset: 0;
@@ -106,7 +108,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2.2rem 1.6rem;
+  padding: 1.8rem 3.2rem 3.2rem;
   text-align: center;
   z-index: 2;
   box-sizing: border-box;
@@ -114,9 +116,9 @@ body {
 
 .avatar-wrapper {
   position: relative;
-  width: 74px;
-  height: 74px;
-  margin-bottom: 0.6rem;
+  width: 76px;
+  height: 76px;
+  margin-bottom: 0.65rem;
   flex-shrink: 0;
 }
 
@@ -130,20 +132,20 @@ body {
 }
 
 .profile-name {
-  font-size: 1.12rem;
+  font-size: 1.06rem;
   font-weight: 700;
   letter-spacing: -0.01em;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.35rem;
   color: var(--text-main);
-  max-width: 180px;
+  max-width: 185px;
   overflow-wrap: break-word;
 }
 
 .profile-bio {
-  font-size: 0.82rem;
-  line-height: 1.35;
+  font-size: 0.8rem;
+  line-height: 1.38;
   color: var(--text-muted);
-  max-width: 175px;
+  max-width: 165px;
   overflow-wrap: break-word;
 }
 
@@ -174,7 +176,7 @@ main {
 
 /* Nest row into upper valleys */
 .honeycomb-row + .honeycomb-row {
-  margin-top: -50px;
+  margin-top: -48px;
 }
 
 /* Hoist hovered row above neighboring rows */
@@ -186,8 +188,8 @@ main {
 /* Hexagon App Card */
 .hex-tile {
   display: block;
-  width: 210px;
-  height: 230px;
+  width: 220px;
+  height: 240px;
   position: relative;
   text-decoration: none;
   color: inherit;
@@ -218,6 +220,7 @@ main {
   stroke: var(--hex-border);
   stroke-width: var(--hex-stroke-width);
   stroke-linejoin: round;
+  paint-order: stroke fill;
   transition: fill 0.3s ease, stroke 0.3s ease;
 }
 
@@ -226,7 +229,7 @@ main {
   fill: var(--hex-hover-fill);
 }
 
-/* Text bounded strictly inside the hexagon */
+/* Text bounded strictly inside the hexagon with generous clearance */
 .hex-card-inner {
   position: absolute;
   inset: 0;
@@ -234,15 +237,15 @@ main {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 1.8rem 1.2rem;
+  padding: 1.5rem 2.2rem 2.2rem;
   text-align: center;
   z-index: 2;
   box-sizing: border-box;
 }
 
 .hex-icon {
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
@@ -263,11 +266,11 @@ main {
 }
 
 .hex-title {
-  font-size: 1.02rem;
+  font-size: 0.96rem;
   font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--text-main);
-  max-width: 135px;
+  max-width: 125px;
   line-height: 1.25;
   overflow-wrap: break-word;
   word-break: break-word;
